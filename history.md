@@ -14,12 +14,12 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | 0 | Hero | `#inicio` | `components/sections/Hero.tsx` | Hecho |
 | 1 | No hace falta conocer a los novios | `#concepto` | `components/sections/Concepto.tsx` | Hecha |
 | 2 | Los novios | `#novios` | `components/sections/Novios.tsx` | Hecha |
-| 3 | El orden del día | `#plan` | `OrdenDelDia.tsx` | Pendiente |
+| 3 | El orden del día | `#plan` | `components/sections/OrdenDelDia.tsx` | En curso: hechos los momentos 01 y 02 de 05 |
 | 4 | Invitaciones | `#invitaciones` | `Invitaciones.tsx` | Pendiente |
 | 5 | Dudas | `#dudas` | `Dudas.tsx` | Pendiente |
 | 6 | Footer | — | `Footer.tsx` | Pendiente |
 
-Orden previsto para lo que queda, de más a menos impacto: sección 3, footer, sección 5 y sección 4.
+Orden previsto para lo que queda, de más a menos impacto: resto de la sección 3, footer, sección 5 y sección 4.
 
 ---
 
@@ -89,6 +89,7 @@ components/
     Hero.tsx
     Concepto.tsx
     Novios.tsx
+    OrdenDelDia.tsx
   ui/
     button.tsx        Botón de shadcn, con el tamaño "pill" añadido
   placeholder.tsx     Hueco de imagen provisional
@@ -184,6 +185,199 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Arrastre y hover.** Solo a partir de 768 px. Al pulsar una foto sube por encima de las demás; al pasar el ratón se endereza, crece un 5 % y gana sombra.
 - **Móvil.** Una sola columna en zigzag con una línea recta de puntos que se descubre con `clip-path`.
 
+### Sección 3
+
+- **Datos.** Los momentos están en un array (`momentos`); la timeline se genera con un bucle, así que añadir los tres que faltan es añadir tres entradas, más sus formas de hueco. La barra de progreso ya muestra los cinco nombres.
+- **Pantalla fija.** `ScrollTrigger` con `pin` y `scrub`; la sección dura una pantalla de scroll por cada transición.
+- **Contenido superpuesto.** Todos los momentos ocupan la misma celda de rejilla y solo se ve el actual, de modo que el layout no salta al cambiar.
+- **Hora.** Cada carácter es una celda con `overflow: hidden`; el dígito viejo sube y el nuevo entra desde abajo. Si un dígito no cambia entre dos momentos (el "1" de 15:30 a 17:00), no se anima.
+- **Nombre y contador.** El mismo movimiento vertical que la hora, dentro de una máscara.
+- **Frase.** Fundido cruzado con un poco de desplazamiento.
+- **Imagen.** La que sale se va a la izquierda girando y desvaneciéndose; la que entra llega desde fuera de la pantalla por la derecha. El hueco se ajusta al espacio disponible con unidades de contenedor (`cqw` y `cqh`), para no desbordarse en pantallas bajas.
+- **Fondo y texto.** Se anima el `backgroundColor` y el `color` del escenario a la vez.
+- **Progreso.** El relleno crece con `scaleX` desde la izquierda; el punto y el nombre activos cambian de tamaño y opacidad.
+- **Móvil y movimiento reducido.** No se fija nada: los momentos se apilan en vertical, cada uno con su color, y no hay barra de progreso.
+
+### Conceptos de código nuevos en las secciones 2 y 3
+
+Lo que aparece por primera vez en estas dos secciones, explicado con el trozo de código donde se usa.
+
+#### `gsap.matchMedia()` con varias condiciones
+
+En vez de una sola media query, se le pasa un objeto con nombre para cada una. La función se ejecuta cuando cambia cualquiera, y dentro se consulta cuáles se cumplen:
+
+```ts
+mm.add(
+  {
+    animado: "(prefers-reduced-motion: no-preference)",
+    escritorio: "(min-width: 768px)",
+  },
+  (context) => {
+    const { animado, escritorio } = context.conditions!
+    if (!animado) return        // sin animaciones: todo queda en su estado final
+    // ...animaciones comunes...
+    if (!escritorio) return     // lo de abajo solo en escritorio
+    // ...arrastre y hover...
+  }
+)
+```
+
+Si la función devuelve otra función, GSAP la llama al deshacer ese bloque. Ahí se quitan los `addEventListener`, que GSAP no conoce.
+
+#### Timeline con `scrub`
+
+Una timeline normal avanza con el tiempo. Con `scrollTrigger: { scrub: true }` avanza con el scroll: su progreso (de 0 a 1) es la posición del scroll entre `start` y `end`. Las duraciones dejan de ser segundos y pasan a ser proporciones: un tween de duración 1 ocupa el doble de scroll que uno de 0.5.
+
+```ts
+scrollTrigger: {
+  trigger: mesa,
+  start: "top 70%",        // empieza cuando el borde superior de la mesa llega al 70 % de la ventana
+  end: "bottom bottom",    // termina cuando su borde inferior toca el de la ventana
+  scrub: true,
+}
+```
+
+#### Parámetro de posición de la timeline
+
+El último argumento de `tl.to()`, `tl.from()` o `tl.fromTo()` dice cuándo empieza ese tween:
+
+- sin nada: al terminar el anterior;
+- un número (`t`): en ese instante exacto de la timeline;
+- `"<0.3"`: 0.3 después del **inicio** del tween anterior.
+
+En la sección 3, todos los tweens de una transición llevan la misma `t` para que ocurran a la vez.
+
+#### `from`, `to` y `fromTo`
+
+- `to`: del estado actual al que se indica.
+- `from`: del estado que se indica al actual. GSAP coloca el elemento en el estado inicial nada más crear el tween; por eso las polaroids están ocultas antes de hacer scroll.
+- `fromTo`: se fijan los dos extremos. Se usa cuando el estado de partida no es el del CSS, como la imagen que entra desde `xPercent: 120`.
+
+`autoAlpha` es `opacity` más `visibility`: al llegar a 0 pone `visibility: hidden`, y el elemento deja de recibir clics.
+
+#### Dibujar una línea de puntos con una máscara SVG
+
+`DrawSVGPlugin` dibuja un trazo animando su `stroke-dasharray`, que es la misma propiedad que hace la línea discontinua, así que no puede animar una línea de puntos directamente. La solución tiene dos piezas:
+
+```tsx
+<mask id="novios-mascara" maskUnits="userSpaceOnUse" ...>
+  {/* trazo continuo: esto es lo que se anima */}
+  <path data-novios="tramo" d={tramo} stroke="white" strokeWidth="12" />
+</mask>
+{/* línea de puntos: no se toca */}
+<path d={linea} mask="url(#novios-mascara)" strokeDasharray="18 14" />
+```
+
+En una máscara, lo blanco deja ver y lo demás tapa. Al ir dibujando el trazo blanco, se va descubriendo la línea de puntos que hay debajo.
+
+#### Dos capas para dos animaciones sobre `transform`
+
+El scroll (la caída de la polaroid) y el arrastre escriben los dos en `transform`. Sobre el mismo elemento, el último en escribir borraría al otro. Cada polaroid tiene por eso dos elementos:
+
+```tsx
+<figure data-novios="polaroid">   {/* la anima la timeline del scroll */}
+  <div>...</div>                  {/* es el Draggable y recibe el hover */}
+</figure>
+```
+
+Los transforms de padre e hijo se suman, así que una foto arrastrada sigue donde se dejó aunque el scroll mueva a su padre.
+
+#### `Draggable`
+
+```ts
+Draggable.create(marco, {
+  type: "x,y",            // se mueve en los dos ejes
+  bounds: scope.current,  // no puede salir de la sección
+  inertia: true,          // al soltar sigue un poco (InertiaPlugin)
+  zIndexBoost: false,     // el z-index se gestiona a mano...
+  onPress: () => gsap.set(foto, { zIndex: ++altura }),  // ...en la capa exterior
+})
+```
+
+El `z-index` se sube en la capa exterior porque es ella la que compite con las otras polaroids; subirlo en la interior no tendría efecto fuera de su padre.
+
+#### Posiciones con variables CSS y unidades de contenedor
+
+Cada polaroid recibe su posición como variables en `style`, y la clase solo las aplica desde 768 px. En móvil no afectan y la foto queda en la columna:
+
+```tsx
+style={{ "--x": "33.91%", "--y": "16.67%" }}
+className="relative md:absolute md:top-(--y) md:left-(--x)"
+```
+
+Dentro de la polaroid, los márgenes y el pie de foto se miden en `cqw` (el 1 % del ancho del contenedor más cercano marcado con `@container`). La polaroid entera escala como una imagen, sin media queries.
+
+En la sección 3 se usa también `cqh` (alto del contenedor) para que el hueco de imagen quepa tanto a lo ancho como a lo alto: `width: min(100cqw, 100cqh * proporción)`.
+
+#### Sección fija con `pin`
+
+```ts
+scrollTrigger: {
+  trigger: escenario,
+  pin: true,                                  // el elemento se queda quieto en pantalla
+  scrub: true,
+  end: `+=${(momentos.length - 1) * 100}%`,   // una pantalla de scroll por transición
+}
+```
+
+`pin` añade debajo el espacio necesario para que el resto de la página no se monte encima. Por eso los `ScrollTrigger` deben crearse en el orden de la página: cada uno necesita saber cuánto espacio han añadido los anteriores.
+
+#### Superponer contenido en la misma celda de rejilla
+
+Los nombres, horas, frases e imágenes de todos los momentos ocupan el mismo sitio. En vez de `position: absolute`, se colocan todos en la misma celda:
+
+```tsx
+<p className="grid overflow-hidden">
+  <span className="col-start-1 row-start-1">Ceremonia</span>
+  <span className="invisible col-start-1 row-start-1">Banquete</span>
+</p>
+```
+
+La celda mide lo que el mayor de sus hijos, así que el layout no salta al cambiar de momento. El `overflow: hidden` del padre hace de máscara: el texto que sube o baja desaparece al salir de él.
+
+#### Contador rodante (odómetro)
+
+La hora se parte en cinco celdas, una por carácter. Cada celda apila el carácter de cada momento, y al cambiar se mueve el viejo hacia arriba y el nuevo desde abajo:
+
+```ts
+const rodar = (sale, entra, t) =>
+  tl.to(sale, { yPercent: -100 }, t)
+    .fromTo(entra, { yPercent: 100 }, { yPercent: 0 }, t)
+```
+
+`yPercent` es un porcentaje del alto del propio elemento: ±100 lo saca justo fuera de su celda. Si un carácter es igual en los dos momentos, se salta.
+
+#### Generar la animación desde un array
+
+La sección 3 no escribe cada transición a mano. Los momentos son datos y un bucle crea la transición de cada uno al siguiente:
+
+```ts
+for (let i = 0; i < momentos.length - 1; i++) {
+  // transición del momento i al i + 1, colocada en el instante i de la timeline
+}
+```
+
+El mismo array pinta el HTML con `.map()`. Añadir un momento es añadir un objeto.
+
+#### Animar una transformación que ya tiene una clase
+
+Tailwind 4 escribe `scale-x-0` o `-translate-x-1/2` en las propiedades CSS `scale` y `translate`, no en `transform`. GSAP anima `transform`, y las tres se combinan. Consecuencias:
+
+- un elemento centrado con `-translate-1/2` se puede escalar con GSAP sin perder el centrado (las etiquetas de año);
+- un elemento con la clase `scale-x-0` seguiría a escala 0 aunque GSAP animase `scaleX`. Por eso el relleno de la barra parte de `style={{ transform: "scaleX(0)" }}`, que sí es lo que GSAP modifica.
+
+#### Variante `motion-safe` de Tailwind
+
+`md:motion-safe:flex` aplica la clase solo desde 768 px **y** si el usuario no ha pedido reducir el movimiento. Con eso se elige por CSS, sin JavaScript, entre la versión fija de la sección 3 y la apilada.
+
+#### Fuentes con `next/font`
+
+```ts
+const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" })
+```
+
+Next descarga la fuente al compilar y la sirve desde el propio sitio; el navegador no llama a Google. `variable` la expone como variable CSS, que `globals.css` recoge en `--font-manuscrita`.
+
 ### Comprobaciones
 
 Antes de dar una pieza por hecha: `npm run typecheck`, `npm run lint`, `npm run build` y revisión visual a 1440, 1024, 900 y 390 px, incluido el modo de movimiento reducido.
@@ -253,6 +447,7 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Separación entre cards | Cards seguidas | 120 y 240 px de margen extra antes de apilarse | Hace que las tres se suelten a la vez al salir |
 | Alto de las cards | 560 px | Unos 496 px | La pila completa cabe en un portátil de 900 px de alto |
 | Tamaño de las polaroids | 340 px de ancho sobre 1920 | 3 columnas de ancho (unos 324 px sobre 1368) | Es el reparto en columnas que pide la propia especificación; las posiciones verticales se escalaron en proporción |
+| Imagen que sale (sección 3) | Cruza en horizontal hasta `xPercent: -120` | Además se desvanece | Sin el fundido pasaba por encima del texto de la izquierda |
 | Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón) | Se acerca más al boceto de Figma mientras no hay ilustraciones |
 
 ---
@@ -267,6 +462,7 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Ilustración de los novios | Hero | Hueco en blanco |
 | Animaciones de las tres cards | Sección 1 | Hueco en blanco |
 | Seis fotos o dibujos | Sección 2 | Hueco de color |
+| Imágenes de los momentos | Sección 3 | Hueco en blanco con su forma |
 | Año de la primera polaroid | Sección 2 | La primera polaroid va sin año |
 | Marca, fecha, lugar y número de plazas | Hero | Textos entre corchetes |
 | Columnas y canal que fija el profesor | Toda la página | 12 columnas y 24 px de canal |
@@ -278,6 +474,8 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 - Los enlaces del menú (`#plan`, `#novios`, `#invitaciones`, `#dudas`) no saltan a ningún sitio hasta que existan esas secciones.
 - Probar a mano el arrastre del marquee y el de las polaroids con el ratón.
 - A 1920 × 1080 el hueco de los novios apenas se monta sobre el titular; a 1440 × 900 sí lo hace como en Figma.
+- Sección 3: faltan los momentos 03 (Discursos), 04 (Tarta) y 05 (Baile), con sus formas de hueco, el cambio de color del texto sobre fondos claros y el botón de compra del último.
+- Georgia dibuja los números con cifras de estilo antiguo (suben y bajan de la línea); se corregirá solo al pasar a Boska.
 - Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1 y parallax de las polaroids en la sección 2.
 
 ---
@@ -292,3 +490,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Hero, en estático y con su timeline de entrada |
 | 7 de octubre de 2026 | Sección 1: marquee arrastrable, cursor, revelado del párrafo y cards apiladas |
 | 7 de octubre de 2026 | Sección 2: polaroids arrastrables, línea de tiempo dibujada con el scroll y etiquetas de año |
+| 7 de octubre de 2026 | Sección 3, primera parte: pantalla fija con los momentos 01 (Ceremonia) y 02 (Banquete) |

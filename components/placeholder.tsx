@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils"
 const shapes = {
   rect: "",
   rounded: "rounded-[28px]",
+  arch: "rounded-t-full rounded-b-lg",
+  circle: "rounded-full",
 }
 
 function Placeholder({
