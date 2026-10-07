@@ -80,7 +80,7 @@ function Hero() {
             href="#inicio"
             className="font-display text-xl italic sm:text-2xl lg:text-3xl"
           >
-            [Tu marca]
+            Logo
           </a>
           <nav aria-label="Principal" className="hidden md:block">
             <ul className="flex gap-6 lg:gap-10 lg:text-lg">

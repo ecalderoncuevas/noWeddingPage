@@ -4,8 +4,10 @@ import { useRef } from "react"
 
 import { Placeholder } from "@/components/placeholder"
 import { gsap, useGSAP } from "@/lib/gsap"
+import { cn } from "@/lib/utils"
 
 const lila = "#672d4b"
+const verde = "#b0b487"
 const marron = "#54392d"
 const beige = "#f1f0e2"
 
@@ -17,8 +19,10 @@ const momentos = [
     frase: "Lágrimas, arroz y un «sí, quiero» que no compromete a nadie.",
     fondo: lila,
     texto: beige,
+    acento: verde,
     slot: "plan-ceremonia",
     forma: "arch",
+    hueco: "",
     ancho: 540,
     alto: 700,
   },
@@ -29,10 +33,40 @@ const momentos = [
       "Cinco platos, barra libre y una mesa llena de gente que tampoco conoce a los novios.",
     fondo: marron,
     texto: beige,
+    acento: verde,
     slot: "plan-banquete",
     forma: "circle",
+    hueco: "",
     ancho: 600,
     alto: 600,
+  },
+  {
+    hora: "19:00",
+    nombre: "Discursos",
+    frase:
+      "El padrino, la mejor amiga y, si te atreves, tú. Micrófono abierto.",
+    fondo: verde,
+    texto: lila,
+    acento: marron,
+    slot: "plan-discursos",
+    forma: "capsule",
+    hueco: "bg-beige text-marron",
+    ancho: 400,
+    alto: 700,
+  },
+  {
+    hora: "20:00",
+    nombre: "Tarta",
+    frase:
+      "Tres pisos, un cuchillo demasiado grande y la foto que todos esperan.",
+    fondo: beige,
+    texto: lila,
+    acento: marron,
+    slot: "plan-tarta",
+    forma: "tarta",
+    hueco: "",
+    ancho: 540,
+    alto: 660,
   },
 ] as const
 
@@ -45,6 +79,44 @@ const total = numero(etapas.length - 1)
 // Elementos superpuestos en la misma celda: solo se ve el del momento actual
 const capa = (i: number) =>
   i ? "invisible col-start-1 row-start-1" : "col-start-1 row-start-1"
+
+// El hueco de la tarta no es una forma simple: tres pisos y una guinda
+function Hueco({
+  momento,
+  slot,
+  className,
+}: {
+  momento: (typeof momentos)[number]
+  slot: string
+  className?: string
+}) {
+  if (momento.forma !== "tarta") {
+    return (
+      <Placeholder
+        slot={slot}
+        width={momento.ancho}
+        height={momento.alto}
+        shape={momento.forma}
+        className={cn(momento.hueco, className)}
+      />
+    )
+  }
+
+  return (
+    <div
+      data-slot={slot}
+      style={{ aspectRatio: `${momento.ancho} / ${momento.alto}` }}
+      className={cn("flex w-full flex-col items-center", className)}
+    >
+      <span className="mb-[1.85%] aspect-square w-[11.1%] rounded-full bg-lila" />
+      <span className="min-h-0 w-[40.7%] flex-[170] rounded-3xl bg-verde" />
+      <span className="min-h-0 w-[70.4%] flex-[200] rounded-3xl bg-verde" />
+      <span className="flex min-h-0 w-full flex-[220] items-center justify-center rounded-3xl bg-verde text-xs tracking-[0.18em] text-marron uppercase">
+        Imagen o ilustración
+      </span>
+    </div>
+  )
+}
 
 function OrdenDelDia() {
   const scope = useRef<HTMLElement>(null)
@@ -65,10 +137,21 @@ function OrdenDelDia() {
           const puntos = q("[data-plan='punto']")
           const etiquetas = q("[data-plan='etapa']")
           // Una celda por carácter de la hora, con un dígito por momento
-          const celdas = q("[data-plan='celda']").map((celda) =>
-            Array.from(celda.children)
+          const cajas = q("[data-plan='celda']") as HTMLElement[]
+          const celdas = cajas.map(
+            (caja) => Array.from(caja.children) as HTMLElement[]
           )
           const visibles = celdas.map(() => 0)
+          // Cada celda mide lo que su dígito actual, en em para que escale
+          const anchos = celdas.map((digitos, posicion) => {
+            const cuerpo = parseFloat(
+              getComputedStyle(cajas[posicion]).fontSize
+            )
+            return digitos.map((digito) => `${digito.offsetWidth / cuerpo}em`)
+          })
+          cajas.forEach((caja, posicion) =>
+            gsap.set(caja, { width: anchos[posicion][0] })
+          )
 
           gsap.set(puntos[0], { scale: 1.6 })
           gsap.set(etiquetas[0], { opacity: 1 })
@@ -79,15 +162,22 @@ function OrdenDelDia() {
               trigger: escenario,
               pin: true,
               scrub: true,
+              invalidateOnRefresh: true,
               end: `+=${(momentos.length - 1) * 100}%`,
             },
           })
 
           // Sube el elemento que sale y entra el nuevo desde abajo
-          const rodar = (sale: Element, entra: Element, t: number) =>
-            tl
-              .to(sale, { yPercent: -100 }, t)
-              .fromTo(entra, { yPercent: 100 }, { yPercent: 0 }, t)
+          const rodar = (sale: Element, entra: Element, t: number) => {
+            tl.to(sale, { yPercent: -100 }, t).fromTo(
+              entra,
+              { yPercent: 100 },
+              { yPercent: 0 },
+              t
+            )
+            // Ya está fuera de su máscara: puede dejar de estar oculto
+            gsap.set(entra, { visibility: "visible" })
+          }
 
           for (let i = 0; i < momentos.length - 1; i++) {
             const t = i
@@ -99,16 +189,18 @@ function OrdenDelDia() {
               t
             ).fromTo(
               imagenes[i + 1],
-              { xPercent: 120, rotation: 8 },
-              { xPercent: 0, rotation: 0 },
+              { x: "60vw", rotation: 8 },
+              { x: 0, rotation: 0 },
               t
             )
+            gsap.set(imagenes[i + 1], { visibility: "visible" })
 
             celdas.forEach((digitos, posicion) => {
               if (momentos[i].hora[posicion] === siguiente.hora[posicion]) {
                 return
               }
               rodar(digitos[visibles[posicion]], digitos[i + 1], t)
+              tl.to(cajas[posicion], { width: anchos[posicion][i + 1] }, t)
               visibles[posicion] = i + 1
             })
             rodar(nombres[i], nombres[i + 1], t)
@@ -126,6 +218,7 @@ function OrdenDelDia() {
                 { backgroundColor: siguiente.fondo, color: siguiente.texto },
                 t
               )
+              .to(q("[data-plan='eyebrow']"), { color: siguiente.acento }, t)
               .to(
                 q("[data-plan='relleno']"),
                 { scaleX: (i + 1) / etapas.length },
@@ -136,11 +229,6 @@ function OrdenDelDia() {
               .to(puntos[i + 1], { scale: 1.6 }, t)
               .to(etiquetas[i + 1], { opacity: 1 }, t)
           }
-
-          // Las capas ocultas ya están en su posición de entrada
-          gsap.set(q(".invisible:not([data-plan='frase'])"), {
-            visibility: "visible",
-          })
         }
       )
     },
@@ -158,7 +246,13 @@ function OrdenDelDia() {
         className="hidden h-svh min-h-[40rem] flex-col overflow-hidden md:motion-safe:flex"
       >
         <div className="contenedor items-center pt-10 lg:pt-12">
-          <p className="eyebrow col-span-4 text-verde">El orden del día</p>
+          <p
+            data-plan="eyebrow"
+            style={{ color: momentos[0].acento }}
+            className="eyebrow col-span-4"
+          >
+            El orden del día
+          </p>
           <p className="col-span-4 col-start-5 flex gap-2 justify-self-end font-display text-2xl font-bold lg:col-start-9 lg:text-3xl">
             <span className="inline-grid overflow-hidden">
               {momentos.map((momento, i) => (
@@ -182,7 +276,7 @@ function OrdenDelDia() {
                 <span
                   key={posicion}
                   data-plan="celda"
-                  className="inline-grid overflow-hidden text-center"
+                  className="inline-grid justify-items-start overflow-hidden"
                 >
                   {momentos.map((momento, i) => (
                     <span key={momento.slot} className={capa(i)}>
@@ -218,12 +312,7 @@ function OrdenDelDia() {
                 }}
                 className={capa(i)}
               >
-                <Placeholder
-                  slot={momento.slot}
-                  width={momento.ancho}
-                  height={momento.alto}
-                  shape={momento.forma}
-                />
+                <Hueco momento={momento} slot={momento.slot} />
               </div>
             ))}
           </div>
@@ -266,7 +355,10 @@ function OrdenDelDia() {
             className="py-16"
           >
             <div className="contenedor gap-y-3">
-              <p className="eyebrow col-span-full text-verde">
+              <p
+                style={{ color: momento.acento }}
+                className="eyebrow col-span-full"
+              >
                 {numero(i)} / {total} · El orden del día
               </p>
               <p className="col-span-full font-display text-[clamp(5rem,27vw,10rem)] leading-none font-bold tracking-[-0.02em]">
@@ -278,11 +370,9 @@ function OrdenDelDia() {
               <p className="col-span-full mt-2 max-w-md text-lg leading-[1.45]">
                 {momento.frase}
               </p>
-              <Placeholder
+              <Hueco
+                momento={momento}
                 slot={`${momento.slot}-movil`}
-                width={momento.ancho}
-                height={momento.alto}
-                shape={momento.forma}
                 className="col-span-full mx-auto mt-8 max-w-xs"
               />
             </div>

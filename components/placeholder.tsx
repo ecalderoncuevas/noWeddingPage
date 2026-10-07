@@ -5,6 +5,7 @@ const shapes = {
   rounded: "rounded-[28px]",
   arch: "rounded-t-full rounded-b-lg",
   circle: "rounded-full",
+  capsule: "rounded-full",
 }
 
 function Placeholder({

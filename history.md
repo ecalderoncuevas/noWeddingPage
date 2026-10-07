@@ -14,7 +14,7 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | 0 | Hero | `#inicio` | `components/sections/Hero.tsx` | Hecho |
 | 1 | No hace falta conocer a los novios | `#concepto` | `components/sections/Concepto.tsx` | Hecha |
 | 2 | Los novios | `#novios` | `components/sections/Novios.tsx` | Hecha |
-| 3 | El orden del día | `#plan` | `components/sections/OrdenDelDia.tsx` | En curso: hechos los momentos 01 y 02 de 05 |
+| 3 | El orden del día | `#plan` | `components/sections/OrdenDelDia.tsx` | En curso: hechos los momentos 01 a 04 de 05 |
 | 4 | Invitaciones | `#invitaciones` | `Invitaciones.tsx` | Pendiente |
 | 5 | Dudas | `#dudas` | `Dudas.tsx` | Pendiente |
 | 6 | Footer | — | `Footer.tsx` | Pendiente |
@@ -190,11 +190,12 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Datos.** Los momentos están en un array (`momentos`); la timeline se genera con un bucle, así que añadir los tres que faltan es añadir tres entradas, más sus formas de hueco. La barra de progreso ya muestra los cinco nombres.
 - **Pantalla fija.** `ScrollTrigger` con `pin` y `scrub`; la sección dura una pantalla de scroll por cada transición.
 - **Contenido superpuesto.** Todos los momentos ocupan la misma celda de rejilla y solo se ve el actual, de modo que el layout no salta al cambiar.
-- **Hora.** Cada carácter es una celda con `overflow: hidden`; el dígito viejo sube y el nuevo entra desde abajo. Si un dígito no cambia entre dos momentos (el "1" de 15:30 a 17:00), no se anima.
+- **Hora.** Cada carácter es una celda con `overflow: hidden`; el dígito viejo sube y el nuevo entra desde abajo. Si un dígito no cambia entre dos momentos (el "1" de 15:30 a 17:00), no se anima. Cada celda mide lo que su dígito actual y su ancho se anima con él: si reservara el ancho del más grande, el "1" quedaría separado del resto.
 - **Nombre y contador.** El mismo movimiento vertical que la hora, dentro de una máscara.
 - **Frase.** Fundido cruzado con un poco de desplazamiento.
-- **Imagen.** La que sale se va a la izquierda girando y desvaneciéndose; la que entra llega desde fuera de la pantalla por la derecha. El hueco se ajusta al espacio disponible con unidades de contenedor (`cqw` y `cqh`), para no desbordarse en pantallas bajas.
-- **Fondo y texto.** Se anima el `backgroundColor` y el `color` del escenario a la vez.
+- **Imagen.** La que sale se va a la izquierda girando y desvaneciéndose; la que entra llega desde fuera de la pantalla por la derecha (`x: "60vw"`, en unidades de ventana para que ninguna forma asome antes de tiempo, por estrecha que sea).
+- **Formas del hueco.** Arco, círculo y cápsula son variantes de `Placeholder`. La tarta es un componente propio (`Hueco`): tres pisos que se reparten la altura con `flex` y una guinda. El hueco se ajusta al espacio disponible con unidades de contenedor (`cqw` y `cqh`), para no desbordarse en pantallas bajas.
+- **Fondo y texto.** Se anima el `backgroundColor` y el `color` del escenario a la vez. La etiqueta superior tiene su propio color (`acento`): verde sobre los fondos oscuros y marrón sobre los claros.
 - **Progreso.** El relleno crece con `scaleX` desde la izquierda; el punto y el nombre activos cambian de tamaño y opacidad.
 - **Móvil y movimiento reducido.** No se fija nada: los momentos se apilan en vertical, cada uno con su color, y no hay barra de progreso.
 
@@ -448,6 +449,7 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Alto de las cards | 560 px | Unos 496 px | La pila completa cabe en un portátil de 900 px de alto |
 | Tamaño de las polaroids | 340 px de ancho sobre 1920 | 3 columnas de ancho (unos 324 px sobre 1368) | Es el reparto en columnas que pide la propia especificación; las posiciones verticales se escalaron en proporción |
 | Imagen que sale (sección 3) | Cruza en horizontal hasta `xPercent: -120` | Además se desvanece | Sin el fundido pasaba por encima del texto de la izquierda |
+| Huecos de los momentos 03 y 04 | Relleno marrón al 12 % | Relleno liso (beige y verde) | Es lo que muestran los bocetos de Figma |
 | Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón) | Se acerca más al boceto de Figma mientras no hay ilustraciones |
 
 ---
@@ -474,7 +476,8 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 - Los enlaces del menú (`#plan`, `#novios`, `#invitaciones`, `#dudas`) no saltan a ningún sitio hasta que existan esas secciones.
 - Probar a mano el arrastre del marquee y el de las polaroids con el ratón.
 - A 1920 × 1080 el hueco de los novios apenas se monta sobre el titular; a 1440 × 900 sí lo hace como en Figma.
-- Sección 3: faltan los momentos 03 (Discursos), 04 (Tarta) y 05 (Baile), con sus formas de hueco, el cambio de color del texto sobre fondos claros y el botón de compra del último.
+- Sección 3: falta el momento 05 (Baile), con su estrella de 16 puntas y el botón de compra.
+- Los anchos de los dígitos de la hora se miden al cargar; al pasar a Boska habrá que medirlos cuando la fuente esté cargada (`document.fonts.ready`).
 - Georgia dibuja los números con cifras de estilo antiguo (suben y bajan de la línea); se corregirá solo al pasar a Boska.
 - Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1 y parallax de las polaroids en la sección 2.
 
@@ -491,3 +494,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Sección 1: marquee arrastrable, cursor, revelado del párrafo y cards apiladas |
 | 7 de octubre de 2026 | Sección 2: polaroids arrastrables, línea de tiempo dibujada con el scroll y etiquetas de año |
 | 7 de octubre de 2026 | Sección 3, primera parte: pantalla fija con los momentos 01 (Ceremonia) y 02 (Banquete) |
+| 7 de octubre de 2026 | Sección 3, segunda parte: momentos 03 (Discursos) y 04 (Tarta), con texto en lila sobre fondos claros |
