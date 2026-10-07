@@ -3,6 +3,8 @@
 import { useRef } from "react"
 
 import { Placeholder } from "@/components/placeholder"
+import { Star } from "@/components/star"
+import { buttonVariants } from "@/components/ui/button"
 import { gsap, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -11,7 +13,7 @@ const verde = "#b0b487"
 const marron = "#54392d"
 const beige = "#f1f0e2"
 
-// Momentos ya maquetados; el resto se añade a este array
+// Los cinco momentos del día; la timeline se genera a partir de este array
 const momentos = [
   {
     hora: "15:30",
@@ -68,19 +70,35 @@ const momentos = [
     ancho: 540,
     alto: 660,
   },
+  {
+    hora: "21:00",
+    nombre: "Baile",
+    frase:
+      "DJ hasta que se acabe la noche. La corbata en la cabeza es opcional.",
+    fondo: lila,
+    texto: beige,
+    acento: verde,
+    slot: "plan-baile",
+    forma: "star",
+    hueco: "",
+    ancho: 620,
+    alto: 620,
+  },
 ] as const
 
-// La barra de progreso muestra ya los cinco momentos del día
-const etapas = ["Ceremonia", "Banquete", "Discursos", "Tarta", "Baile"]
-
 const numero = (i: number) => String(i + 1).padStart(2, "0")
-const total = numero(etapas.length - 1)
+const total = numero(momentos.length - 1)
+
+const boton = cn(
+  buttonVariants({ size: "pill" }),
+  "bg-beige text-lila hover:bg-beige/85"
+)
 
 // Elementos superpuestos en la misma celda: solo se ve el del momento actual
 const capa = (i: number) =>
   i ? "invisible col-start-1 row-start-1" : "col-start-1 row-start-1"
 
-// El hueco de la tarta no es una forma simple: tres pisos y una guinda
+// La estrella y la tarta no son formas simples de Placeholder
 function Hueco({
   momento,
   slot,
@@ -90,6 +108,27 @@ function Hueco({
   slot: string
   className?: string
 }) {
+  if (momento.forma === "star") {
+    return (
+      <div
+        data-slot={slot}
+        className={cn(
+          "relative flex aspect-square w-full items-center justify-center",
+          className
+        )}
+      >
+        <Star
+          points={16}
+          inner={0.82}
+          className="absolute inset-0 size-full text-beige/12"
+        />
+        <span className="relative text-xs tracking-[0.18em] uppercase opacity-70">
+          Imagen o ilustración
+        </span>
+      </div>
+    )
+  }
+
   if (momento.forma !== "tarta") {
     return (
       <Placeholder
@@ -221,7 +260,7 @@ function OrdenDelDia() {
               .to(q("[data-plan='eyebrow']"), { color: siguiente.acento }, t)
               .to(
                 q("[data-plan='relleno']"),
-                { scaleX: (i + 1) / etapas.length },
+                { scaleX: (i + 1) / momentos.length },
                 t
               )
               .to(puntos[i], { scale: 1 }, t)
@@ -229,6 +268,14 @@ function OrdenDelDia() {
               .to(puntos[i + 1], { scale: 1.6 }, t)
               .to(etiquetas[i + 1], { opacity: 1 }, t)
           }
+
+          // El botón de compra aparece con la frase del último momento
+          tl.fromTo(
+            q("[data-plan='boton']"),
+            { autoAlpha: 0, y: 20 },
+            { autoAlpha: 1, y: 0, duration: 0.4 },
+            momentos.length - 2 + 0.4
+          )
         }
       )
     },
@@ -300,6 +347,13 @@ function OrdenDelDia() {
                 </p>
               ))}
             </div>
+            <a
+              data-plan="boton"
+              href="#invitaciones"
+              className={cn(boton, "invisible mt-6")}
+            >
+              Quiero mi invitación
+            </a>
           </div>
 
           <div className="[container-type:size] col-span-4 col-start-5 grid place-items-center self-stretch lg:col-span-5 lg:col-start-8">
@@ -327,8 +381,8 @@ function OrdenDelDia() {
               className="absolute inset-x-0 -top-px h-[3px] origin-left bg-current"
             />
             <ol className="grid grid-cols-5">
-              {etapas.map((etapa) => (
-                <li key={etapa} className="relative pt-6">
+              {momentos.map((momento) => (
+                <li key={momento.slot} className="relative pt-6">
                   <span
                     data-plan="punto"
                     className="absolute top-0 left-0 size-2.5 -translate-y-1/2 rounded-full bg-current"
@@ -337,7 +391,7 @@ function OrdenDelDia() {
                     data-plan="etapa"
                     className="font-semibold opacity-45 lg:text-lg"
                   >
-                    {etapa}
+                    {momento.nombre}
                   </span>
                 </li>
               ))}
@@ -370,6 +424,14 @@ function OrdenDelDia() {
               <p className="col-span-full mt-2 max-w-md text-lg leading-[1.45]">
                 {momento.frase}
               </p>
+              {i === momentos.length - 1 && (
+                <a
+                  href="#invitaciones"
+                  className={cn(boton, "col-span-full mt-4 justify-self-start")}
+                >
+                  Quiero mi invitación
+                </a>
+              )}
               <Hueco
                 momento={momento}
                 slot={`${momento.slot}-movil`}
