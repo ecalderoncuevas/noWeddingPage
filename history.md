@@ -15,11 +15,11 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | 1 | No hace falta conocer a los novios | `#concepto` | `components/sections/Concepto.tsx` | Hecha |
 | 2 | Los novios | `#novios` | `components/sections/Novios.tsx` | Hecha |
 | 3 | El orden del día | `#plan` | `components/sections/OrdenDelDia.tsx` | Hecha |
-| 4 | Invitaciones | `#invitaciones` | `Invitaciones.tsx` | Pendiente |
+| 4 | Invitaciones | `#invitaciones` | `components/sections/Invitaciones.tsx` | Hecha |
 | 5 | Dudas | `#dudas` | `Dudas.tsx` | Pendiente |
 | 6 | Footer | — | `Footer.tsx` | Pendiente |
 
-Orden previsto para lo que queda, de más a menos impacto: footer, sección 5 y sección 4.
+Orden previsto para lo que queda, footer y sección 5.
 
 ---
 
@@ -87,6 +87,7 @@ app/
 components/
   sections/           Una pieza de la página por archivo
     Hero.tsx
+    Invitaciones.tsx
     Concepto.tsx
     Novios.tsx
     OrdenDelDia.tsx
@@ -199,6 +200,18 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Fondo y texto.** Se anima el `backgroundColor` y el `color` del escenario a la vez. La etiqueta superior tiene su propio color (`acento`): verde sobre los fondos oscuros y marrón sobre los claros.
 - **Progreso.** El relleno crece con `scaleX` desde la izquierda; el punto y el nombre activos cambian de tamaño y opacidad.
 - **Móvil y movimiento reducido.** No se fija nada: los momentos se apilan en vertical, cada uno con su color, y no hay barra de progreso.
+
+### Sección 4
+
+- **Datos.** Los tres tickets están en un array con sus textos, colores y el lugar que ocupan en la tira.
+- **Tira.** Una rejilla de tres columnas sin separación. En móvil y tablet (por debajo de 1024 px) los tickets se apilan y "Familia" pasa a ser el primero con `order-first`.
+- **Alturas alineadas con `subgrid`.** La tira define seis filas (serie, nombre, frase, precio, lista y botón) y cada ticket las hereda con `grid-template-rows: subgrid`. Aunque una frase ocupe dos líneas en un ticket, los precios y los botones de los tres quedan a la misma altura.
+- **Muescas y borde dentado.** Se recortan con máscaras CSS (`mask-image` con varios `radial-gradient` y `mask-composite: intersect`), definidas en la clase `.ticket` de `globals.css`. Cada ticket lleva `data-movil` y `data-escritorio` con su posición (`inicio`, `medio` o `fin`), y la máscara cambia con ella: dentado en los extremos de la tira y un cuarto de círculo en cada esquina que toca a otro ticket. Al ser parte del propio ticket, las muescas se mueven con él en el hover.
+- **Líneas de corte.** Un borde discontinuo entre tickets: vertical en escritorio y horizontal al apilar.
+- **Texto que escala con el ticket.** El nombre y el precio se miden en `cqw`, con un tope en `rem`, para que "Mesa presidencial" quepa en una línea a cualquier ancho.
+- **Matriz.** El texto vertical usa `writing-mode: vertical-rl` girado 180°.
+- **Entrada.** `gsap.from` con `y: 60`, `opacity: 0` y `stagger: 0.15`, lanzado por `ScrollTrigger` sin `scrub`: se reproduce una vez, al entrar la tira en pantalla.
+- **Hover.** El ticket sube 12 px y gira un grado. Solo con ratón y desde 1024 px.
 
 ### Conceptos de código nuevos en las secciones 2 y 3
 
@@ -451,6 +464,8 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Tamaño de las polaroids | 340 px de ancho sobre 1920 | 3 columnas de ancho (unos 324 px sobre 1368) | Es el reparto en columnas que pide la propia especificación; las posiciones verticales se escalaron en proporción |
 | Imagen que sale (sección 3) | Cruza en horizontal hasta `xPercent: -120` | Además se desvanece | Sin el fundido pasaba por encima del texto de la izquierda |
 | Huecos de los momentos 03 y 04 | Relleno marrón al 12 % | Relleno liso (beige y verde) | Es lo que muestran los bocetos de Figma |
+| Apilado de los tickets | Por debajo de 768 px | Por debajo de 1024 px | Con 8 columnas cada ticket medía unos 235 px y el contenido no cabía |
+| Tamaño del titular y del precio (sección 4) | 104 px y 112 px | Unos 70 px y 72 px a 1368 | El titular cabe en una línea junto al dato de plazas, y "120 €" cabe con "por persona" al lado |
 | Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón) | Se acerca más al boceto de Figma mientras no hay ilustraciones |
 
 ---
@@ -479,7 +494,9 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 - A 1920 × 1080 el hueco de los novios apenas se monta sobre el titular; a 1440 × 900 sí lo hace como en Figma.
 - Los anchos de los dígitos de la hora se miden al cargar; al pasar a Boska habrá que medirlos cuando la fuente esté cargada (`document.fonts.ready`).
 - Georgia dibuja los números con cifras de estilo antiguo (suben y bajan de la línea); se corregirá solo al pasar a Boska.
-- Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1 y parallax de las polaroids en la sección 2.
+- Los botones "Quiero esta invitación" enlazan a `#invitaciones` (la propia sección): no hay pasarela de compra.
+- Precios y nombres de los tickets son provisionales.
+- Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1, parallax de las polaroids en la sección 2 y separación del ticket por la línea de corte en la sección 4.
 
 ---
 
@@ -496,3 +513,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Sección 3, primera parte: pantalla fija con los momentos 01 (Ceremonia) y 02 (Banquete) |
 | 7 de octubre de 2026 | Sección 3, segunda parte: momentos 03 (Discursos) y 04 (Tarta), con texto en lila sobre fondos claros |
 | 7 de octubre de 2026 | Sección 3 completa: momento 05 (Baile), con la estrella de 16 puntas y el botón de compra |
+| 7 de octubre de 2026 | Sección 4: tira de tres tickets con muescas, borde dentado, entrada escalonada y hover |

@@ -186,6 +186,76 @@
     text-transform: uppercase;
     letter-spacing: 0.18em;
     }
+
+  /* Tickets: las muescas y el borde dentado se recortan con máscaras.
+     "inicio" y "fin" son los extremos de la tira; "medio", el ticket central. */
+  .ticket {
+    --m: 22px;
+    --d: 13px;
+    --paso: 38px;
+    --muesca: #0000 var(--m), #000 calc(var(--m) + 0.5px);
+    --diente: #0000 var(--d), #000 calc(var(--d) + 0.5px);
+    mask-composite: intersect;
+    mask-position: center;
+    }
+  .ticket[data-movil="inicio"] {
+    mask-image:
+      radial-gradient(circle at 50% 0, var(--diente)),
+      radial-gradient(circle at left bottom, var(--muesca)),
+      radial-gradient(circle at right bottom, var(--muesca));
+    mask-size: var(--paso) 100%, 100% 100%, 100% 100%;
+    mask-repeat: repeat-x, no-repeat, no-repeat;
+    }
+  .ticket[data-movil="medio"] {
+    mask-image:
+      radial-gradient(circle at left top, var(--muesca)),
+      radial-gradient(circle at right top, var(--muesca)),
+      radial-gradient(circle at left bottom, var(--muesca)),
+      radial-gradient(circle at right bottom, var(--muesca));
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    }
+  .ticket[data-movil="fin"] {
+    mask-image:
+      radial-gradient(circle at 50% 100%, var(--diente)),
+      radial-gradient(circle at left top, var(--muesca)),
+      radial-gradient(circle at right top, var(--muesca));
+    mask-size: var(--paso) 100%, 100% 100%, 100% 100%;
+    mask-repeat: repeat-x, no-repeat, no-repeat;
+    }
+
+  @media (min-width: 1024px) {
+    .ticket {
+      --m: 24px;
+      --d: 14px;
+      --paso: 41px;
+      }
+    .ticket[data-escritorio="inicio"] {
+      mask-image:
+        radial-gradient(circle at 0 50%, var(--diente)),
+        radial-gradient(circle at right top, var(--muesca)),
+        radial-gradient(circle at right bottom, var(--muesca));
+      mask-size: 100% var(--paso), 100% 100%, 100% 100%;
+      mask-repeat: repeat-y, no-repeat, no-repeat;
+      }
+    .ticket[data-escritorio="medio"] {
+      mask-image:
+        radial-gradient(circle at left top, var(--muesca)),
+        radial-gradient(circle at right top, var(--muesca)),
+        radial-gradient(circle at left bottom, var(--muesca)),
+        radial-gradient(circle at right bottom, var(--muesca));
+      mask-size: 100% 100%;
+      mask-repeat: no-repeat;
+      }
+    .ticket[data-escritorio="fin"] {
+      mask-image:
+        radial-gradient(circle at 100% 50%, var(--diente)),
+        radial-gradient(circle at left top, var(--muesca)),
+        radial-gradient(circle at left bottom, var(--muesca));
+      mask-size: 100% var(--paso), 100% 100%, 100% 100%;
+      mask-repeat: repeat-y, no-repeat, no-repeat;
+      }
+    }
 }
 
 /* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca */
