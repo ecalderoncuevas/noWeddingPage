@@ -16,10 +16,10 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | 2 | Los novios | `#novios` | `components/sections/Novios.tsx` | Hecha |
 | 3 | El orden del día | `#plan` | `components/sections/OrdenDelDia.tsx` | Hecha |
 | 4 | Invitaciones | `#invitaciones` | `components/sections/Invitaciones.tsx` | Hecha |
-| 5 | Dudas | `#dudas` | `Dudas.tsx` | Pendiente |
+| 5 | Dudas | `#dudas` | `components/sections/Dudas.tsx` | Hecha |
 | 6 | Footer | — | `Footer.tsx` | Pendiente |
 
-Orden previsto para lo que queda, footer y sección 5.
+Orden previsto para lo que queda, solo el footer.
 
 ---
 
@@ -89,6 +89,7 @@ components/
     Hero.tsx
     Invitaciones.tsx
     Concepto.tsx
+    Dudas.tsx
     Novios.tsx
     OrdenDelDia.tsx
   ui/
@@ -212,6 +213,17 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Matriz.** El texto vertical usa `writing-mode: vertical-rl` girado 180°.
 - **Entrada.** `gsap.from` con `y: 60`, `opacity: 0` y `stagger: 0.15`, lanzado por `ScrollTrigger` sin `scrub`: se reproduce una vez, al entrar la tira en pantalla.
 - **Hover.** El ticket sube 12 px y gira un grado. Solo con ratón y desde 1024 px.
+
+### Sección 5
+
+- **Acordeón propio.** Cada pregunta es un `<button>` con `aria-expanded` y `aria-controls`; la respuesta es una región con `aria-labelledby`. Se abre y se cierra con clic o con Tab y Enter.
+- **Estado y animación.** El estado de React (`abierta`) solo guarda qué duda está abierta, para los atributos `aria`. La animación la lanza el propio clic, dentro de `contextSafe`, que es la forma de crear animaciones de GSAP desde un evento para que se limpien al desmontar.
+- **Una sola abierta.** Al abrir una se cierra la anterior en el mismo gesto. La primera empieza abierta.
+- **Altura.** `height` de 0 a `"auto"` con GSAP. Al cerrar, la respuesta pasa a `display: none` para que no quede accesible con el lector de pantalla.
+- **Panel.** Llega inclinándose con rebote (`rotation` de 0 a 1.2, `back.out(2)`) y la flecha gira 180°. El borde dentado es una máscara CSS (`.panel-dentado`), la misma técnica que en los tickets. En móvil no se inclina.
+- **`ScrollTrigger.refresh()`** al terminar de abrir o cerrar, porque cambia el alto de la página y lo que hay debajo se desplaza.
+- **Estrellas.** Giran despacio en bucle (`rotation: 360`, 20 s, `ease: "none"`).
+- **Movimiento reducido.** Las respuestas se abren y cierran al instante y las estrellas no giran.
 
 ### Conceptos de código nuevos en las secciones 2 y 3
 
@@ -376,10 +388,11 @@ El mismo array pinta el HTML con `.map()`. Añadir un momento es añadir un obje
 
 #### Animar una transformación que ya tiene una clase
 
-Tailwind 4 escribe `scale-x-0` o `-translate-x-1/2` en las propiedades CSS `scale` y `translate`, no en `transform`. GSAP anima `transform`, y las tres se combinan. Consecuencias:
+Tailwind 4 escribe `rotate-[1.2deg]`, `scale-x-0` o `-translate-x-1/2` en las propiedades CSS `rotate`, `scale` y `translate`, no en `transform`. La primera vez que GSAP toca un elemento, lee esas tres propiedades, las incorpora a su propio `transform` y las deja en `none`. Desde ese momento solo cuenta lo que diga GSAP. Consecuencias:
 
-- un elemento centrado con `-translate-1/2` se puede escalar con GSAP sin perder el centrado (las etiquetas de año);
-- un elemento con la clase `scale-x-0` seguiría a escala 0 aunque GSAP animase `scaleX`. Por eso el relleno de la barra parte de `style={{ transform: "scaleX(0)" }}`, que sí es lo que GSAP modifica.
+- la clase sirve como estado inicial, pero no se suma a la animación. El panel de las dudas tiene la clase `md:rotate-[1.2deg]`; para que llegue inclinado hay que animar `rotation` de 0 a 1.2. Animar de -1.2 a 0 lo dejaría recto;
+- un valor en porcentaje (`-translate-1/2`) queda convertido a píxeles en ese momento. Vale para elementos de tamaño fijo, como las etiquetas de año;
+- cuando el valor de partida importa, es más claro ponerlo donde GSAP lo va a escribir: el relleno de la barra de progreso parte de `style={{ transform: "scaleX(0)" }}`.
 
 #### Variante `motion-safe` de Tailwind
 
@@ -466,6 +479,8 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Huecos de los momentos 03 y 04 | Relleno marrón al 12 % | Relleno liso (beige y verde) | Es lo que muestran los bocetos de Figma |
 | Apilado de los tickets | Por debajo de 768 px | Por debajo de 1024 px | Con 8 columnas cada ticket medía unos 235 px y el contenido no cabía |
 | Tamaño del titular y del precio (sección 4) | 104 px y 112 px | Unos 70 px y 72 px a 1368 | El titular cabe en una línea junto al dato de plazas, y "120 €" cabe con "por persona" al lado |
+| Acordeón de las dudas | Componentes de shadcn donde se pueda | Acordeón propio con GSAP | El de shadcn trae su propia animación de altura, que chocaría con la de GSAP |
+| Inclinación del panel de respuesta | -1.2° | +1.2° en CSS | Figma mide los giros al revés que CSS; así cae hacia la derecha, como en el boceto |
 | Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón) | Se acerca más al boceto de Figma mientras no hay ilustraciones |
 
 ---
@@ -481,6 +496,8 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Animaciones de las tres cards | Sección 1 | Hueco en blanco |
 | Seis fotos o dibujos | Sección 2 | Hueco de color |
 | Imágenes de los momentos | Sección 3 | Hueco en blanco con su forma |
+| Respuestas de las dudas | Sección 5 | Lorem ipsum (salvo la primera) |
+| Correo de contacto | Sección 5 | El texto entre corchetes |
 | Año de la primera polaroid | Sección 2 | La primera polaroid va sin año |
 | Marca, fecha, lugar y número de plazas | Hero | Textos entre corchetes |
 | Columnas y canal que fija el profesor | Toda la página | 12 columnas y 24 px de canal |
@@ -514,3 +531,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Sección 3, segunda parte: momentos 03 (Discursos) y 04 (Tarta), con texto en lila sobre fondos claros |
 | 7 de octubre de 2026 | Sección 3 completa: momento 05 (Baile), con la estrella de 16 puntas y el botón de compra |
 | 7 de octubre de 2026 | Sección 4: tira de tres tickets con muescas, borde dentado, entrada escalonada y hover |
+| 7 de octubre de 2026 | Sección 5: cabecera, acordeón accesible con panel inclinado y borde dentado |
