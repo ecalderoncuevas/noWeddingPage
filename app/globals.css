@@ -7,6 +7,7 @@
 @theme inline {
     --font-display: var(--font-display);
     --font-body: var(--font-body);
+    --font-manuscrita: var(--font-manuscrita);
     --color-lila: var(--lila);
     --color-verde: var(--verde);
     --color-beige: var(--beige);
@@ -132,6 +133,7 @@
     /* Provisional hasta importar Boska: se cambia solo aquí */
     --font-display: Georgia, "Times New Roman", serif;
     --font-body: system-ui, sans-serif;
+    --font-manuscrita: var(--font-caveat), cursive;
 
     --columnas: 4;
     --canal: 16px;

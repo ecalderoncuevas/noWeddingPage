@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { Caveat, Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
 import type { Metadata } from "next"
@@ -15,6 +15,8 @@ export const metadata: Metadata = {
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'})
 
+const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" })
+
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
@@ -29,7 +31,7 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}
+      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, caveat.variable)}
     >
       <body>
         <SmoothScroll />

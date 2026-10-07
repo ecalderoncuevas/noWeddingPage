@@ -13,13 +13,13 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | — | Base común (rejilla, paleta, tipografía, huecos, GSAP y Lenis) | — | varios | Hecha |
 | 0 | Hero | `#inicio` | `components/sections/Hero.tsx` | Hecho |
 | 1 | No hace falta conocer a los novios | `#concepto` | `components/sections/Concepto.tsx` | Hecha |
-| 2 | Los novios | `#novios` | `Novios.tsx` | Pendiente |
+| 2 | Los novios | `#novios` | `components/sections/Novios.tsx` | Hecha |
 | 3 | El orden del día | `#plan` | `OrdenDelDia.tsx` | Pendiente |
 | 4 | Invitaciones | `#invitaciones` | `Invitaciones.tsx` | Pendiente |
 | 5 | Dudas | `#dudas` | `Dudas.tsx` | Pendiente |
 | 6 | Footer | — | `Footer.tsx` | Pendiente |
 
-Orden previsto para lo que queda, de más a menos impacto: sección 3, sección 2, footer, sección 5 y sección 4.
+Orden previsto para lo que queda, de más a menos impacto: sección 3, footer, sección 5 y sección 4.
 
 ---
 
@@ -88,6 +88,7 @@ components/
   sections/           Una pieza de la página por archivo
     Hero.tsx
     Concepto.tsx
+    Novios.tsx
   ui/
     button.tsx        Botón de shadcn, con el tamaño "pill" añadido
   placeholder.tsx     Hueco de imagen provisional
@@ -174,6 +175,15 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Salida de la pila.** Cada card lleva un margen inferior de tantas franjas como cards tiene encima. Sin él, la tercera card se soltaba antes que las otras y tapaba sus títulos al salir de la sección.
 - **`overflow: hidden`** va solo en el contenedor del marquee. En la sección rompería el `sticky` de las cards.
 
+### Sección 2
+
+- **Mesa.** Las seis polaroids van en un bloque cuadrado del ancho del contenedor y se colocan en porcentajes, así que todo escala con la ventana. El interior de cada polaroid (márgenes y pie de foto) se mide en unidades de contenedor (`cqw`).
+- **Línea de tiempo.** Un único `path` de puntos, siempre visible, tapado por una máscara SVG. La máscara tiene un tramo continuo por cada salto entre polaroids, y lo que se anima con `DrawSVGPlugin` son esos tramos: DrawSVG no dibuja bien una línea discontinua.
+- **Timeline con `scrub`.** Polaroid 1 y, después, cinco veces: tramo de línea, caída de la polaroid (`y: -200`, `scale: 1.2`, giro extra y `back.out(1.4)`) y etiqueta de año. Termina cuando el final de la mesa llega al borde inferior de la ventana.
+- **Dos capas por polaroid.** La exterior (`<figure>`) la mueve el scroll; la interior (el marco) es el `Draggable` y recibe el hover. Si los dos animaran el mismo elemento se pisarían, porque ambos escriben en `transform`.
+- **Arrastre y hover.** Solo a partir de 768 px. Al pulsar una foto sube por encima de las demás; al pasar el ratón se endereza, crece un 5 % y gana sombra.
+- **Móvil.** Una sola columna en zigzag con una línea recta de puntos que se descubre con `clip-path`.
+
 ### Comprobaciones
 
 Antes de dar una pieza por hecha: `npm run typecheck`, `npm run lint`, `npm run build` y revisión visual a 1440, 1024, 900 y 390 px, incluido el modo de movimiento reducido.
@@ -207,6 +217,7 @@ Reglas de contraste:
 |---|---|---|---|
 | `--font-display` | Georgia, Times New Roman, serif | Boska | Titulares |
 | `--font-body` | system-ui, sans-serif | Por decidir | Resto de textos |
+| `--font-manuscrita` | Caveat (Google Fonts, vía `next/font`) | Caveat | Pies de foto de las polaroids |
 
 Todos los componentes usan las clases `font-display` y `font-body`, nunca una familia escrita a mano: cuando llegue Boska se cambia en un solo sitio (`app/globals.css`).
 
@@ -241,6 +252,8 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Bucle del marquee | Helper `horizontalLoop()` de GSAP | Bucle propio con una pista de tres copias | Mucho menos código y el mismo resultado; se cambia si el profesor exige el helper |
 | Separación entre cards | Cards seguidas | 120 y 240 px de margen extra antes de apilarse | Hace que las tres se suelten a la vez al salir |
 | Alto de las cards | 560 px | Unos 496 px | La pila completa cabe en un portátil de 900 px de alto |
+| Tamaño de las polaroids | 340 px de ancho sobre 1920 | 3 columnas de ancho (unos 324 px sobre 1368) | Es el reparto en columnas que pide la propia especificación; las posiciones verticales se escalaron en proporción |
+| Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón) | Se acerca más al boceto de Figma mientras no hay ilustraciones |
 
 ---
 
@@ -253,6 +266,8 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Tipografía Boska | Todos los titulares | Georgia a través de `--font-display` |
 | Ilustración de los novios | Hero | Hueco en blanco |
 | Animaciones de las tres cards | Sección 1 | Hueco en blanco |
+| Seis fotos o dibujos | Sección 2 | Hueco de color |
+| Año de la primera polaroid | Sección 2 | La primera polaroid va sin año |
 | Marca, fecha, lugar y número de plazas | Hero | Textos entre corchetes |
 | Columnas y canal que fija el profesor | Toda la página | 12 columnas y 24 px de canal |
 
@@ -261,11 +276,9 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 ### Por hacer o comprobar
 
 - Los enlaces del menú (`#plan`, `#novios`, `#invitaciones`, `#dudas`) no saltan a ningún sitio hasta que existan esas secciones.
-- Probar a mano el arrastre del marquee con el ratón.
-- En móvil, la pila de cards no llega a completarse porque la página se acaba ahí; se resolverá al añadir la sección siguiente.
+- Probar a mano el arrastre del marquee y el de las polaroids con el ratón.
 - A 1920 × 1080 el hueco de los novios apenas se monta sobre el titular; a 1440 × 900 sí lo hace como en Figma.
-- Extras opcionales sin hacer: confeti en el hero y encogido de la card tapada en la sección 1.
-- `app/layout.tsx` importa `Geist` sin usarlo (aviso del linter que viene del andamiaje inicial).
+- Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1 y parallax de las polaroids en la sección 2.
 
 ---
 
@@ -278,3 +291,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Base común: rejilla, paleta, tipografía provisional, `Placeholder`, registro de plugins y scroll suave |
 | 7 de octubre de 2026 | Hero, en estático y con su timeline de entrada |
 | 7 de octubre de 2026 | Sección 1: marquee arrastrable, cursor, revelado del párrafo y cards apiladas |
+| 7 de octubre de 2026 | Sección 2: polaroids arrastrables, línea de tiempo dibujada con el scroll y etiquetas de año |
