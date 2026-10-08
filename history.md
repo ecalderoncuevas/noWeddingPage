@@ -4,7 +4,7 @@ Landing para vender invitaciones a una boda enorme en la que nadie se casa. Proy
 
 Este documento recoge qué hay construido, con qué herramientas y por qué se tomó cada decisión. La especificación de diseño completa (textos, medidas y animaciones de cada sección) está en `noWeddingLanding-animaciones.md`; aquí solo se documenta lo ya programado y lo que se aparta de ella.
 
-Última actualización: 7 de octubre de 2026.
+Última actualización: 8 de octubre de 2026.
 
 ## Estado
 
@@ -125,8 +125,9 @@ Cada elemento se coloca sobre líneas de columna con las utilidades de Tailwind 
 
 - **`Placeholder`** — hueco en blanco con el tamaño final de la imagen que irá ahí. Recibe ancho y alto (de los que saca la proporción), forma, tono del fondo y una etiqueta. Lleva un `data-slot` con nombre (`hero-novios`, `concepto-card-1`...) para sustituirlo después sin tocar el layout ni las animaciones.
 - **`Star`** — estrella SVG con el número de puntas que se le pida. Se usa la de ocho puntas en el marquee; servirá también para la de 16 (sección 3) y las de 4 (sección 5).
-- **`Button`** — el de shadcn. Se le añadió el tamaño `pill` para los botones de compra; el color se pasa por clase en cada sección. Como son enlaces a un ancla, se usa `buttonVariants` sobre un `<a>`.
-- **`SmoothScroll`** — se monta una vez en el layout. No pinta nada.
+- **`Button`** — el de shadcn, con el tamaño `pill` añadido. Los botones de compra ya no lo usan: tienen su propio componente.
+- **`BotonCompra`** (`components/boton-compra.tsx`) — botón de compra tipo ticket: cuerpo, línea discontinua en SVG y círculo con flecha. Opciones: `variante` (`oscura` sobre lila y marrón, `clara` sobre beige y verde), `tamano` (`grande` o `pequeno`) y `decoracion` (ramo al pasar el ratón y copas al hacer clic; solo header y footer). Todas las medidas van en `em`, así que el tamaño de letra escala el botón entero. Si no cabe en una línea, el texto se parte en dos en vez de desbordar. La especificación está en `noWeddingLanding-boton-compra.md`.
+- **`SmoothScroll`** — se monta una vez en el layout. No pinta nada. Exporta `irA(ancla)` para bajar a un ancla a mano; lo usa el botón de compra cuando frena el clic para que brinden las copas.
 
 ### Servidor y cliente
 
@@ -479,6 +480,9 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 |---|---|---|---|
 | Nombre de las clases | `.section` y `.container` | `.seccion` y `.contenedor` | Tailwind ya tiene una utilidad `container` que pisaba el ancho |
 | Hueco de los novios | `position: absolute` | Colocado en la rejilla (columnas 5 a 8, filas 3 y 4) | Respeta la regla de las columnas y el resultado visual es el mismo |
+| Dibujos del botón de compra | SVG del ramo y las copas exportados de Figma | Dibujados a mano en el propio componente | No había acceso al archivo de Figma; se sustituyen dentro de `Ramo` y `Copa` manteniendo los `data-btn` |
+| Colores de los botones de los tickets | Un color distinto por ticket | Las dos variantes del botón de compra | Lo fija la especificación del botón |
+| Borde exterior del botón de compra | Marco fino alrededor del cuerpo | Sin marco | Se quitó a petición tras verlo en pantalla |
 | Bloques inferiores del hero | Se apilan por debajo de 768 px | Se apilan por debajo de 1024 px | Con 8 columnas quedaban en 160 px y el botón no cabía |
 | Posición de los "?" | Tercio superior del hueco | Hacia el 36–40 % de su altura | En el tercio superior chocaban con "se casa" |
 | Bucle del marquee | Helper `horizontalLoop()` de GSAP | Bucle propio con una pista de tres copias | Mucho menos código y el mismo resultado; se cambia si el profesor exige el helper |
@@ -547,3 +551,5 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Sección 4: tira de tres tickets con muescas, borde dentado, entrada escalonada y hover |
 | 7 de octubre de 2026 | Sección 5: cabecera, acordeón accesible con panel inclinado y borde dentado |
 | 7 de octubre de 2026 | Footer: llamada final, navegación numerada, datos y nombre gigante con revelado de letras. Página completa |
+| 8 de octubre de 2026 | Tipografía Boska en toda la landing |
+| 8 de octubre de 2026 | Componente `BotonCompra` con sus animaciones, colocado en hero, sección 3, tickets y footer |

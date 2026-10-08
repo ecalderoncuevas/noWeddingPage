@@ -2,8 +2,8 @@
 
 import { useRef } from "react"
 
+import { BotonCompra } from "@/components/boton-compra"
 import { Star } from "@/components/star"
-import { buttonVariants } from "@/components/ui/button"
 import { gsap, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -21,7 +21,7 @@ const tickets = [
       "Sitio en la foto de grupo (al fondo)",
     ],
     colores: "bg-verde text-marron",
-    boton: "bg-marron text-beige hover:bg-marron/85",
+    boton: "clara",
     destacado: false,
     movil: "medio",
     escritorio: "inicio",
@@ -39,7 +39,7 @@ const tickets = [
       "Primera fila en la foto de grupo",
     ],
     colores: "bg-lila text-beige",
-    boton: "bg-beige text-lila hover:bg-beige/85",
+    boton: "oscura",
     destacado: true,
     movil: "inicio",
     escritorio: "medio",
@@ -57,13 +57,13 @@ const tickets = [
       "Cortas la tarta",
     ],
     colores: "bg-marron text-beige",
-    boton: "bg-verde text-marron hover:bg-verde/85",
+    boton: "oscura",
     destacado: false,
     movil: "fin",
     escritorio: "fin",
     giro: 1,
   },
-]
+] as const
 
 function Invitaciones() {
   const scope = useRef<HTMLElement>(null)
@@ -201,16 +201,13 @@ function Invitaciones() {
                 ))}
               </ul>
 
-              <a
-                href="#invitaciones"
-                className={cn(
-                  buttonVariants({ size: "pill" }),
-                  "col-start-1 w-full px-3 text-[1.0625rem] xl:text-[1.1875rem]",
-                  ticket.boton
-                )}
+              <BotonCompra
+                variante={ticket.boton}
+                tamano="pequeno"
+                className="col-start-1 w-full max-sm:text-xs lg:max-xl:text-xs"
               >
                 Quiero esta invitación
-              </a>
+              </BotonCompra>
 
               <p className="col-start-2 row-span-full row-start-1 ml-4 flex w-10 items-center justify-center border-l-2 border-dashed border-current/40 pl-3 lg:ml-[1.2vw] lg:w-[4vw] xl:ml-4 xl:w-14">
                 <span className="rotate-180 text-xs font-semibold tracking-[0.18em] whitespace-nowrap uppercase [writing-mode:vertical-rl]">

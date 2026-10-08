@@ -2,10 +2,9 @@
 
 import { useRef } from "react"
 
+import { BotonCompra } from "@/components/boton-compra"
 import { Placeholder } from "@/components/placeholder"
-import { buttonVariants } from "@/components/ui/button"
 import { gsap, SplitText, useGSAP } from "@/lib/gsap"
-import { cn } from "@/lib/utils"
 
 const enlaces = [
   { href: "#plan", texto: "El plan" },
@@ -13,11 +12,6 @@ const enlaces = [
   { href: "#invitaciones", texto: "Invitaciones" },
   { href: "#dudas", texto: "Dudas" },
 ]
-
-const boton = cn(
-  buttonVariants({ size: "pill" }),
-  "bg-beige text-lila hover:bg-beige/85"
-)
 
 function Hero() {
   const scope = useRef<HTMLDivElement>(null)
@@ -75,7 +69,8 @@ function Hero() {
         ref={scope}
         className="contenedor min-h-[max(100svh,900px)] content-start lg:grid-rows-[auto_auto_auto_1fr]"
       >
-        <header className="col-span-full flex items-center justify-between gap-4 py-6 lg:row-start-1 lg:py-8">
+        {/* El margen de arriba deja sitio al ramo que asoma sobre el botón */}
+        <header className="col-span-full flex items-center justify-between gap-4 pt-10 pb-6 lg:row-start-1 lg:pb-8">
           <a
             href="#inicio"
             className="font-display text-xl italic sm:text-2xl lg:text-3xl"
@@ -96,12 +91,14 @@ function Hero() {
               ))}
             </ul>
           </nav>
-          <a
-            href="#invitaciones"
-            className={cn(boton, "max-sm:h-10 max-sm:px-4 max-sm:text-base")}
+          <BotonCompra
+            tamano="pequeno"
+            decoracion
+            esperaRamo={3}
+            className="max-sm:text-xs"
           >
             Comprar invitación
-          </a>
+          </BotonCompra>
         </header>
 
         <p className="eyebrow col-span-full mt-6 text-center text-verde lg:row-start-2 lg:mt-4">
@@ -150,9 +147,7 @@ function Hero() {
             Ceremonia, banquete, discursos, tarta y baile. Todo lo divertido de
             una boda, sin tener que conocer a los novios.
           </p>
-          <a href="#invitaciones" className={boton}>
-            Quiero mi invitación
-          </a>
+          <BotonCompra>Quiero mi invitación</BotonCompra>
         </div>
 
         <div

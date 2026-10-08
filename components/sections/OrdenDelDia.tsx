@@ -2,9 +2,9 @@
 
 import { useRef } from "react"
 
+import { BotonCompra } from "@/components/boton-compra"
 import { Placeholder } from "@/components/placeholder"
 import { Star } from "@/components/star"
-import { buttonVariants } from "@/components/ui/button"
 import { gsap, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -88,11 +88,6 @@ const momentos = [
 
 const numero = (i: number) => String(i + 1).padStart(2, "0")
 const total = numero(momentos.length - 1)
-
-const boton = cn(
-  buttonVariants({ size: "pill" }),
-  "bg-beige text-lila hover:bg-beige/85"
-)
 
 // Elementos superpuestos en la misma celda: solo se ve el del momento actual
 const capa = (i: number) =>
@@ -347,13 +342,9 @@ function OrdenDelDia() {
                 </p>
               ))}
             </div>
-            <a
-              data-plan="boton"
-              href="#invitaciones"
-              className={cn(boton, "invisible mt-6")}
-            >
+            <BotonCompra data-plan="boton" className="invisible mt-6">
               Quiero mi invitación
-            </a>
+            </BotonCompra>
           </div>
 
           <div className="[container-type:size] col-span-4 col-start-5 grid place-items-center self-stretch lg:col-span-5 lg:col-start-8">
@@ -425,12 +416,9 @@ function OrdenDelDia() {
                 {momento.frase}
               </p>
               {i === momentos.length - 1 && (
-                <a
-                  href="#invitaciones"
-                  className={cn(boton, "col-span-full mt-4 justify-self-start")}
-                >
+                <BotonCompra className="col-span-full mt-4 justify-self-start">
                   Quiero mi invitación
-                </a>
+                </BotonCompra>
               )}
               <Hueco
                 momento={momento}

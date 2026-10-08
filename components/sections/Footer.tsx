@@ -2,9 +2,8 @@
 
 import { useRef } from "react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { BotonCompra } from "@/components/boton-compra"
 import { gsap, SplitText, useGSAP } from "@/lib/gsap"
-import { cn } from "@/lib/utils"
 
 const enlaces = [
   { href: "#plan", texto: "El plan" },
@@ -60,15 +59,12 @@ function Footer() {
         <p className="col-span-full font-display text-[clamp(2.25rem,4.6vw,4.125rem)] leading-none italic lg:col-span-9">
           ¿Te vienes a la boda de nadie?
         </p>
-        <a
-          href="#invitaciones"
-          className={cn(
-            buttonVariants({ size: "pill" }),
-            "col-span-full mt-8 justify-self-start bg-beige text-marron hover:bg-beige/85 lg:col-span-3 lg:mt-0 lg:justify-self-end"
-          )}
+        <BotonCompra
+          decoracion
+          className="col-span-full mt-8 justify-self-start lg:col-span-3 lg:mt-0 lg:justify-self-end"
         >
           Quiero mi invitación
-        </a>
+        </BotonCompra>
 
         <hr className="col-span-full my-12 border-beige/35 lg:my-16" />
 
