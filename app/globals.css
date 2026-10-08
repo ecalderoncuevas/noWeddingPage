@@ -130,9 +130,9 @@
     --beige: #f1f0e2;
     --marron: #54392d;
 
-    /* Provisional hasta importar Boska: se cambia solo aquí */
-    --font-display: Georgia, "Times New Roman", serif;
-    --font-body: system-ui, sans-serif;
+    /* Boska en titulares y en el resto del texto; Georgia queda de reserva mientras carga */
+    --font-display: var(--font-boska), Georgia, "Times New Roman", serif;
+    --font-body: var(--font-boska), Georgia, "Times New Roman", serif;
     --font-manuscrita: var(--font-caveat), cursive;
 
     --columnas: 4;
