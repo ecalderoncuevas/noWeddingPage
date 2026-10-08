@@ -184,7 +184,10 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 
 ### Sección 1
 
-- **Marquee.** Una pista con tres copias de la frase se mueve un tercio de su ancho (`xPercent: -100 / 3`) en bucle con `ease: "none"`. Al usar porcentaje, no hay que recalcular nada al cambiar el ancho de la ventana.
+- **Marquee.** Dos frases cortas que se alternan, "Boda sin compromiso" y "¡Vivan los novios!", separadas por una estrella de ocho puntas (especificación en `noWeddingLanding-marquee.md`). Una pista con tres copias de la pareja se mueve un tercio de su ancho (`xPercent: -100 / 3`) en bucle con `ease: "none"`. Al usar porcentaje, no hay que recalcular nada al cambiar el texto ni el ancho de la ventana.
+- **Estrellas del marquee.** Tres capas: giran siempre (una sola animación para todas, 8 s por vuelta); al arrastrar, la velocidad del giro sigue a la del arrastre (`InertiaPlugin.getVelocity()` ajusta el `timeScale()` entre 1 y 6, en negativo si se arrastra hacia atrás) y al soltar vuelve a la normal; y cada una late (`scale: 1.25`) al cruzar el centro de la pantalla. El giro arranca con el reloj adelantado, porque una animación en bucle no puede retroceder más allá de su inicio.
+- **Exclamaciones del marquee.** "¡" y "!" van en su propio `<span>` y dan un brinco en bucle (suben girando y caen con `bounce.out`), primero la que abre y 0,18 s después la que cierra. Mismo tono que los "?" del hero.
+- **Sin animaciones**, el marquee muestra la pareja de frases una sola vez, centrada y en letra más pequeña, con clases `motion-reduce:`.
 - **Arrastre.** `Draggable` sobre un elemento invisible, con inercia. Al arrastrar se pausa el bucle y se mueve su progreso; al soltar, sigue solo. Solo a partir de 768 px.
 - **Cursor "Arrastra".** Círculo fijo que sigue al ratón con `gsap.quickTo()` y solo se muestra sobre el marquee.
 - **Párrafo.** `SplitText` por palabras; la opacidad pasa de 0.25 a 1 con `ScrollTrigger` y `scrub`.
@@ -468,7 +471,7 @@ Todos los componentes usan las clases `font-display` y `font-body`, nunca una fa
 
 Recursos que se repiten:
 
-- **Contraste negrita / cursiva** dentro del mismo titular: "Nadie" en negrita y "se casa" en cursiva; "menos en la boda" en cursiva dentro del marquee.
+- **Contraste negrita / cursiva** dentro del mismo titular: "Nadie" en negrita y "se casa" en cursiva; "sin compromiso" y "los novios!" en cursiva dentro del marquee.
 - **Titulares gigantes** con `clamp()`, interlineado de 0.9 a 1 y `letter-spacing: -0.02em`.
 - **Etiqueta** (`.eyebrow`): cuerpo pequeño, mayúsculas y `letter-spacing: 0.18em`, encima de cada bloque.
 - **Botones** en forma de píldora, peso 600.
@@ -566,3 +569,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 8 de octubre de 2026 | Tipografía Boska en toda la landing |
 | 8 de octubre de 2026 | Componente `BotonCompra` con sus animaciones, colocado en hero, sección 3, tickets y footer |
 | 8 de octubre de 2026 | Entrada completa del hero: header, logo, menú, botón, fecha y bloques en cascada |
+| 8 de octubre de 2026 | Sección 1: nuevo texto del marquee con estrellas animadas; la card 02 pasa a llamarse "Sin regalo" |
