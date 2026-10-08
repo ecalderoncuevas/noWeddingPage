@@ -5,6 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    --font-display: var(--font-display);
+    --font-body: var(--font-body);
+    --font-manuscrita: var(--font-manuscrita);
+    --color-lila: var(--lila);
+    --color-verde: var(--verde);
+    --color-beige: var(--beige);
+    --color-marron: var(--marron);
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
     --color-sidebar-ring: var(--sidebar-ring);
@@ -116,14 +123,158 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Landing: paleta, tipografía provisional y rejilla (apartados 1.0 a 1.2) */
+:root {
+    --lila: #672d4b;
+    --verde: #b0b487;
+    --beige: #f1f0e2;
+    --marron: #54392d;
+
+    /* Boska en titulares y en el resto del texto; Georgia queda de reserva mientras carga */
+    --font-display: var(--font-boska), Georgia, "Times New Roman", serif;
+    --font-body: var(--font-boska), Georgia, "Times New Roman", serif;
+    --font-manuscrita: var(--font-caveat), cursive;
+
+    --columnas: 4;
+    --canal: 16px;
+    --margen: 20px;
+}
+
+@media (min-width: 768px) {
+    :root {
+        --columnas: 8;
+        --canal: 20px;
+        --margen: 32px;
+    }
+}
+
+@media (min-width: 1024px) {
+    :root {
+        --columnas: 12;
+        --canal: 24px;
+        --margen: 48px;
+    }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
     }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
     }
   html {
     @apply font-sans;
+    }
+}
+
+@layer components {
+  /* Esqueleto de cada pieza: sección a todo el ancho y contenedor con la rejilla */
+  .seccion {
+    width: 100%;
+    }
+  .contenedor {
+    width: min(1368px, 100% - 2 * var(--margen));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: repeat(var(--columnas), minmax(0, 1fr));
+    column-gap: var(--canal);
+    }
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: clamp(0.8125rem, 1.25vw, 1.125rem);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    }
+
+  /* Tickets: las muescas y el borde dentado se recortan con máscaras.
+     "inicio" y "fin" son los extremos de la tira; "medio", el ticket central. */
+  .ticket {
+    --m: 22px;
+    --d: 13px;
+    --paso: 38px;
+    --muesca: #0000 var(--m), #000 calc(var(--m) + 0.5px);
+    --diente: #0000 var(--d), #000 calc(var(--d) + 0.5px);
+    mask-composite: intersect;
+    mask-position: center;
+    }
+  .ticket[data-movil="inicio"] {
+    mask-image:
+      radial-gradient(circle at 50% 0, var(--diente)),
+      radial-gradient(circle at left bottom, var(--muesca)),
+      radial-gradient(circle at right bottom, var(--muesca));
+    mask-size: var(--paso) 100%, 100% 100%, 100% 100%;
+    mask-repeat: repeat-x, no-repeat, no-repeat;
+    }
+  .ticket[data-movil="medio"] {
+    mask-image:
+      radial-gradient(circle at left top, var(--muesca)),
+      radial-gradient(circle at right top, var(--muesca)),
+      radial-gradient(circle at left bottom, var(--muesca)),
+      radial-gradient(circle at right bottom, var(--muesca));
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    }
+  .ticket[data-movil="fin"] {
+    mask-image:
+      radial-gradient(circle at 50% 100%, var(--diente)),
+      radial-gradient(circle at left top, var(--muesca)),
+      radial-gradient(circle at right top, var(--muesca));
+    mask-size: var(--paso) 100%, 100% 100%, 100% 100%;
+    mask-repeat: repeat-x, no-repeat, no-repeat;
+    }
+
+  /* Panel de respuesta de las dudas: dentado a izquierda y derecha */
+  .panel-dentado {
+    --d: 12px;
+    --paso: 40px;
+    --diente: #0000 var(--d), #000 calc(var(--d) + 0.5px);
+    mask-image:
+      radial-gradient(circle at 0 50%, var(--diente)),
+      radial-gradient(circle at 100% 50%, var(--diente));
+    mask-size: 100% var(--paso);
+    mask-repeat: repeat-y;
+    mask-position: center;
+    mask-composite: intersect;
+    }
+
+  @media (min-width: 1024px) {
+    .ticket {
+      --m: 24px;
+      --d: 14px;
+      --paso: 41px;
+      }
+    .ticket[data-escritorio="inicio"] {
+      mask-image:
+        radial-gradient(circle at 0 50%, var(--diente)),
+        radial-gradient(circle at right top, var(--muesca)),
+        radial-gradient(circle at right bottom, var(--muesca));
+      mask-size: 100% var(--paso), 100% 100%, 100% 100%;
+      mask-repeat: repeat-y, no-repeat, no-repeat;
+      }
+    .ticket[data-escritorio="medio"] {
+      mask-image:
+        radial-gradient(circle at left top, var(--muesca)),
+        radial-gradient(circle at right top, var(--muesca)),
+        radial-gradient(circle at left bottom, var(--muesca)),
+        radial-gradient(circle at right bottom, var(--muesca));
+      mask-size: 100% 100%;
+      mask-repeat: no-repeat;
+      }
+    .ticket[data-escritorio="fin"] {
+      mask-image:
+        radial-gradient(circle at 100% 50%, var(--diente)),
+        radial-gradient(circle at left top, var(--muesca)),
+        radial-gradient(circle at left bottom, var(--muesca));
+      mask-size: 100% var(--paso), 100% 100%, 100% 100%;
+      mask-repeat: repeat-y, no-repeat, no-repeat;
+      }
+    }
+}
+
+/* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca */
+@media (prefers-reduced-motion: no-preference) {
+    [data-hero] {
+        visibility: hidden;
     }
 }
