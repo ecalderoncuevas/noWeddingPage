@@ -17,9 +17,9 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | 3 | El orden del día | `#plan` | `components/sections/OrdenDelDia.tsx` | Hecha |
 | 4 | Invitaciones | `#invitaciones` | `components/sections/Invitaciones.tsx` | Hecha |
 | 5 | Dudas | `#dudas` | `components/sections/Dudas.tsx` | Hecha |
-| 6 | Footer | — | `Footer.tsx` | Pendiente |
+| 6 | Footer | — | `components/sections/Footer.tsx` | Hecho |
 
-Orden previsto para lo que queda, solo el footer.
+Las siete piezas están maquetadas y animadas. Lo que falta es contenido definitivo (fuente, imágenes y textos) y los extras opcionales; está en el apartado 6.
 
 ---
 
@@ -82,7 +82,7 @@ Versiones instaladas (`npm ls`) a fecha de la última actualización.
 ```
 app/
   layout.tsx          Layout raíz: idioma, metadatos, fuentes y scroll suave
-  page.tsx            Solo importa las secciones y las devuelve en orden
+  page.tsx            Solo importa las secciones y las devuelve en orden (<main> y <footer>)
   globals.css         Tema de Tailwind, paleta, tipografía y rejilla
 components/
   sections/           Una pieza de la página por archivo
@@ -90,6 +90,7 @@ components/
     Invitaciones.tsx
     Concepto.tsx
     Dudas.tsx
+    Footer.tsx
     Novios.tsx
     OrdenDelDia.tsx
   ui/
@@ -224,6 +225,15 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **`ScrollTrigger.refresh()`** al terminar de abrir o cerrar, porque cambia el alto de la página y lo que hay debajo se desplaza.
 - **Estrellas.** Giran despacio en bucle (`rotation: 360`, 20 s, `ease: "none"`).
 - **Movimiento reducido.** Las respuestas se abren y cierran al instante y las estrellas no giran.
+
+### Footer
+
+- **Estructura.** Llamada final con botón, navegación numerada (lista ordenada), cuatro bloques de datos (`<dl>`), nombre gigante y fila legal. Va fuera de `<main>`, en un `<footer>`.
+- **Nombre gigante.** Su tamaño se mide en `cqw` (porcentaje del ancho del contenedor) y no en `vw`, porque el contenedor tiene un máximo de 1368 px: así va de margen a margen a cualquier ancho. El valor (15cqw en una línea, 29cqw en dos) se sacó midiendo el texto en el navegador con Georgia.
+- **Dos líneas en móvil.** Cada mitad del nombre es `block` por debajo de 768 px e `inline` por encima.
+- **Revelado de las letras.** `SplitText` por líneas y caracteres, con máscara por líneas; `gsap.from` con `yPercent: 100` y `stagger: 0.03`, lanzado por `ScrollTrigger` sin `scrub`. La máscara es por líneas y no por caracteres para no recortar los lados de las letras en cursiva.
+- **`autoSplit`.** Como el nombre pasa de una línea a dos según el ancho, `SplitText` se crea con `autoSplit: true` y la animación se devuelve desde `onSplit`: si cambian las líneas, rehace el corte y la animación.
+- **Subrayado de los enlaces.** Solo CSS: un pseudoelemento `::after` que crece con `scale-x` de 0 a 1 desde la izquierda, al pasar el ratón y al recibir el foco.
 
 ### Conceptos de código nuevos en las secciones 2 y 3
 
@@ -481,6 +491,8 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Tamaño del titular y del precio (sección 4) | 104 px y 112 px | Unos 70 px y 72 px a 1368 | El titular cabe en una línea junto al dato de plazas, y "120 €" cabe con "por persona" al lado |
 | Acordeón de las dudas | Componentes de shadcn donde se pueda | Acordeón propio con GSAP | El de shadcn trae su propia animación de altura, que chocaría con la de GSAP |
 | Inclinación del panel de respuesta | -1.2° | +1.2° en CSS | Figma mide los giros al revés que CSS; así cae hacia la derecha, como en el boceto |
+| Tamaño del nombre gigante del footer | `font-size` en `vw` (unos 15.7vw) | En `cqw` (15cqw) | El contenedor tiene ancho máximo; en `vw` se saldría en pantallas grandes |
+| Marca en el hero y el footer | "[Tu marca]" | "Logo" | Decisión del autor |
 | Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón) | Se acerca más al boceto de Figma mientras no hay ilustraciones |
 
 ---
@@ -499,21 +511,23 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Respuestas de las dudas | Sección 5 | Lorem ipsum (salvo la primera) |
 | Correo de contacto | Sección 5 | El texto entre corchetes |
 | Año de la primera polaroid | Sección 2 | La primera polaroid va sin año |
-| Marca, fecha, lugar y número de plazas | Hero | Textos entre corchetes |
+| Marca, fecha, lugar, hora, ciudad y número de plazas | Hero, sección 4 y footer | "Logo" y los textos entre corchetes |
+| Enlaces de Instagram y TikTok | Footer | Texto sin enlace |
 | Columnas y canal que fija el profesor | Toda la página | 12 columnas y 24 px de canal |
 
 Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de los titulares gigantes.
 
 ### Por hacer o comprobar
 
-- Los enlaces del menú (`#plan`, `#novios`, `#invitaciones`, `#dudas`) no saltan a ningún sitio hasta que existan esas secciones.
 - Probar a mano el arrastre del marquee y el de las polaroids con el ratón.
 - A 1920 × 1080 el hueco de los novios apenas se monta sobre el titular; a 1440 × 900 sí lo hace como en Figma.
+- El tamaño del nombre gigante del footer (15cqw y 29cqw) está ajustado a Georgia: hay que volver a medirlo con Boska.
+- Comprobar a mano el subrayado de los enlaces del footer al pasar el ratón.
 - Los anchos de los dígitos de la hora se miden al cargar; al pasar a Boska habrá que medirlos cuando la fuente esté cargada (`document.fonts.ready`).
 - Georgia dibuja los números con cifras de estilo antiguo (suben y bajan de la línea); se corregirá solo al pasar a Boska.
 - Los botones "Quiero esta invitación" enlazan a `#invitaciones` (la propia sección): no hay pasarela de compra.
 - Precios y nombres de los tickets son provisionales.
-- Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1, parallax de las polaroids en la sección 2 y separación del ticket por la línea de corte en la sección 4.
+- Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1, parallax de las polaroids en la sección 2 separación del ticket por la línea de corte en la sección 4 y footer que aparece desde debajo.
 
 ---
 
@@ -532,3 +546,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Sección 3 completa: momento 05 (Baile), con la estrella de 16 puntas y el botón de compra |
 | 7 de octubre de 2026 | Sección 4: tira de tres tickets con muescas, borde dentado, entrada escalonada y hover |
 | 7 de octubre de 2026 | Sección 5: cabecera, acordeón accesible con panel inclinado y borde dentado |
+| 7 de octubre de 2026 | Footer: llamada final, navegación numerada, datos y nombre gigante con revelado de letras. Página completa |
