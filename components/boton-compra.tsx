@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useId, useRef } from "react"
 
 import { irA } from "@/components/smooth-scroll"
 import { Star } from "@/components/star"
@@ -136,6 +136,7 @@ function BotonCompra({
   esperaRamo?: number
 } & React.ComponentProps<"a">) {
   const scope = useRef<HTMLAnchorElement>(null)
+  const mascara = useId()
 
   useGSAP(
     () => {
@@ -183,7 +184,7 @@ function BotonCompra({
               ease: "power2.out",
             })
           // Un guion (6) más un hueco (5): al repetirse no se nota el salto
-          const hormigas = gsap.to(q("[data-btn='linea'] rect"), {
+          const hormigas = gsap.to(q("[data-btn='guiones']"), {
             strokeDashoffset: -11,
             duration: 0.5,
             ease: "none",
@@ -457,13 +458,30 @@ function BotonCompra({
         data-btn="caja"
         className="relative flex grow pr-[1.47em] motion-reduce:group-hover/compra:opacity-90"
       >
-        <span className="relative flex min-h-[3.79em] grow items-center rounded-[4px] bg-(--cuerpo) py-[0.7em] pr-[2.75em] pl-[1.58em] text-(--tinta)">
+        <span
+          data-btn="cuerpo"
+          className="relative flex min-h-[3.79em] grow items-center rounded-[4px] bg-(--cuerpo) py-[0.7em] pr-[2.75em] pl-[1.58em] text-(--tinta)"
+        >
           <svg
-            data-btn="linea"
             aria-hidden
             className="pointer-events-none absolute inset-[0.37em] size-[calc(100%-0.74em)] overflow-visible"
           >
+            {/* DrawSVG no dibuja bien una línea discontinua: los guiones se
+                quedan fijos y lo que se dibuja es el trazo continuo de la máscara */}
+            <mask id={mascara}>
+              <rect
+                data-btn="trazo"
+                width="100%"
+                height="100%"
+                rx="2"
+                fill="none"
+                stroke="#fff"
+                strokeWidth="4"
+              />
+            </mask>
             <rect
+              data-btn="guiones"
+              mask={`url(#${mascara})`}
               width="100%"
               height="100%"
               rx="2"
@@ -473,11 +491,17 @@ function BotonCompra({
               strokeDasharray="6 5"
             />
           </svg>
-          <span className="relative leading-[1.15] font-semibold tracking-[0.12em] text-balance uppercase">
+          <span
+            data-btn="texto"
+            className="relative leading-[1.15] font-semibold tracking-[0.12em] text-balance uppercase"
+          >
             {children}
           </span>
         </span>
-        <span className="absolute top-1/2 right-0 grid size-[3.37em] -translate-y-1/2 place-items-center overflow-hidden rounded-full bg-(--tinta) text-(--cuerpo) shadow-[0_0_0_0.21em_var(--cuerpo)]">
+        <span
+          data-btn="circulo"
+          className="absolute top-1/2 right-0 grid size-[3.37em] -translate-y-1/2 place-items-center overflow-hidden rounded-full bg-(--tinta) text-(--cuerpo) shadow-[0_0_0_0.21em_var(--cuerpo)]"
+        >
           <svg
             data-btn="flecha"
             aria-hidden

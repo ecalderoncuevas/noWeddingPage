@@ -158,13 +158,25 @@ Con `prefers-reduced-motion: reduce` no se arranca Lenis ni ninguna animación: 
 
 ### Hero
 
-Una única timeline al cargar, en este orden:
+Una única timeline al cargar. Cada paso lleva su segundo exacto como posición absoluta (`tl.from(..., 0.4)`), para poder mover uno sin descuadrar los demás. La especificación está en `noWeddingLanding-hero-entrada.md`.
 
-1. El titular entra línea a línea (`SplitText` por líneas con máscara, `yPercent: 100`, `stagger: 0.15`).
-2. El hueco de los novios sube (`y: 60`, `opacity: 0`).
-3. Aparecen los dos bloques laterales (`opacity: 0`).
-4. Saltan los "?" (`scale: 0`, `ease: "back.out(2)"`).
-5. Los "?" se quedan flotando en bucle (`y` y `rotation`, `yoyo`, `sine.inOut`).
+| Segundo | Qué pasa |
+|---|---|
+| 0,0 | Baja el header (`yPercent: -100`) |
+| 0,2 | El logo sube desde una máscara (su enlace lleva `overflow: hidden`) y los enlaces del menú suben uno tras otro (`y: 12`, `autoAlpha: 0`, `stagger: 0.06`) |
+| 0,4 | Botón "Comprar invitación": aparece el cuerpo y se dibuja la línea discontinua; a los 0,7 entra el texto y a los 0,85 salta el círculo de la flecha (`back.out(2)`) |
+| 0,5 | "La boda del año": las letras pasan de `letter-spacing: 0.6em` a su sitio mientras aparecen |
+| 0,6 | El titular entra línea a línea (`SplitText` por líneas con máscara, `yPercent: 100`, `stagger: 0.15`) |
+| 1,1 | Sube el hueco de los novios (`y: 60`, `opacity: 0`) |
+| 1,4 | Bloques inferiores en cascada (`y: 20`, `autoAlpha: 0`, `stagger: 0.08`): a la izquierda el párrafo línea a línea y luego el botón; a la derecha sus tres textos |
+| 1,8 | Saltan los "?" (`scale: 0`, `back.out(2)`) y a los 2,5 se quedan flotando en bucle |
+
+Detalles:
+
+- **La línea discontinua del botón** no se puede dibujar con DrawSVG. Igual que en las polaroids, `BotonCompra` lleva una `<mask>` con el mismo rectángulo en trazo continuo (`data-btn="trazo"`), y eso es lo que se dibuja. La timeline del hero llega a las piezas del botón por sus `data-btn`.
+- **La línea de la fecha** tiene alto fijo, `white-space: nowrap` y `overflow: hidden`, y el texto va centrado con flex, así que al separarse las letras crece hacia los dos lados sin mover nada. Por debajo de 640 px puede ocupar dos renglones: ahí no se anima el espaciado, solo aparece.
+- **El párrafo** se corta por líneas solo durante la entrada; al terminar se deshace el corte para que vuelva a ajustarse solo si cambia el ancho.
+- El header va dentro del hero y se va con el scroll, así que si el navegador restaura la página a mitad no hay header a la vista que animar.
 
 Para que no se vea el contenido un instante antes de que arranque la animación, los elementos con `data-hero` empiezan ocultos por CSS (solo si el usuario acepta animaciones) y la timeline los hace visibles al empezar.
 
@@ -553,3 +565,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 7 de octubre de 2026 | Footer: llamada final, navegación numerada, datos y nombre gigante con revelado de letras. Página completa |
 | 8 de octubre de 2026 | Tipografía Boska en toda la landing |
 | 8 de octubre de 2026 | Componente `BotonCompra` con sus animaciones, colocado en hero, sección 3, tickets y footer |
+| 8 de octubre de 2026 | Entrada completa del hero: header, logo, menú, botón, fecha y bloques en cascada |

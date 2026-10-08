@@ -26,36 +26,98 @@ function Hero() {
           type: "lines",
           mask: "lines",
         })
+        const frase = SplitText.create(q("[data-hero='frase']"), {
+          type: "lines",
+        })
         const dudas = q("[data-hero='duda']")
+        // Las piezas del botón del header: las mismas que mueve su hover
+        const comprar = (pieza: string) =>
+          q(`[data-hero='comprar'] [data-btn='${pieza}']`)
+        const cascada = { y: 20, autoAlpha: 0, duration: 0.6, stagger: 0.08 }
+        // En móvil la línea de la fecha puede ocupar dos renglones: separar
+        // las letras la haría saltar, así que ahí solo aparece
+        const ancho = window.matchMedia("(min-width: 640px)").matches
 
+        // Cada paso lleva su segundo exacto para poder moverlo sin
+        // descuadrar los demás
         gsap
           .timeline({ defaults: { ease: "power3.out" } })
-          .from(titular.lines, { yPercent: 100, duration: 1, stagger: 0.15 })
+          .from(q("[data-hero='header']"), { yPercent: -100, duration: 0.6 }, 0)
+          .from(q("[data-hero='logo']"), { yPercent: 100, duration: 0.6 }, 0.2)
+          .from(
+            q("[data-hero='enlace']"),
+            { y: 12, autoAlpha: 0, duration: 0.5, stagger: 0.06 },
+            0.2
+          )
+          .from(comprar("cuerpo"), { autoAlpha: 0, duration: 0.5 }, 0.4)
+          .from(
+            comprar("trazo"),
+            {
+              drawSVG: "0%",
+              duration: 0.5,
+              ease: "power2.inOut",
+              // Sin restos del dibujo: el trazo se adapta si el botón cambia de tamaño
+              onComplete: () =>
+                gsap.set(comprar("trazo"), { clearProps: "all" }),
+            },
+            0.4
+          )
+          .from(comprar("texto"), { autoAlpha: 0, duration: 0.3 }, 0.7)
+          .from(
+            comprar("circulo"),
+            { scale: 0, duration: 0.4, ease: "back.out(2)" },
+            0.85
+          )
+          .from(
+            q("[data-hero='fecha']"),
+            {
+              ...(ancho && { letterSpacing: "0.6em" }),
+              autoAlpha: 0,
+              duration: 0.9,
+              // El espaciado vuelve a depender del CSS al terminar
+              clearProps: "letterSpacing",
+            },
+            0.5
+          )
+          .from(
+            titular.lines,
+            { yPercent: 100, duration: 1, stagger: 0.15 },
+            0.6
+          )
           .from(
             q("[data-hero='novios']"),
             { y: 60, opacity: 0, duration: 0.9 },
-            "-=0.5"
+            1.1
           )
           .from(
-            q("[data-hero='bloque']"),
-            { opacity: 0, duration: 0.6, stagger: 0.1 },
-            "-=0.4"
+            [...frase.lines, ...q("[data-hero='boton']")],
+            {
+              ...cascada,
+              // Deshace el corte por líneas para que el párrafo vuelva a
+              // ajustarse solo si cambia el ancho
+              onComplete: () => frase.revert(),
+            },
+            1.4
           )
-          .from(dudas, {
-            scale: 0,
-            duration: 0.6,
-            ease: "back.out(2)",
-            stagger: 0.12,
-          })
-          .to(dudas, {
-            y: -12,
-            rotation: (i) => (i ? 6 : -6),
-            duration: 2.4,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-            stagger: 0.4,
-          })
+          .from(q("[data-hero='dato']"), cascada, 1.4)
+          .from(
+            dudas,
+            { scale: 0, duration: 0.6, ease: "back.out(2)", stagger: 0.12 },
+            1.8
+          )
+          .to(
+            dudas,
+            {
+              y: -12,
+              rotation: (i) => (i ? 6 : -6),
+              duration: 2.4,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+              stagger: 0.4,
+            },
+            2.5
+          )
 
         gsap.set(q("[data-hero]"), { visibility: "visible" })
       })
@@ -70,17 +132,23 @@ function Hero() {
         className="contenedor min-h-[max(100svh,900px)] content-start lg:grid-rows-[auto_auto_auto_1fr]"
       >
         {/* El margen de arriba deja sitio al ramo que asoma sobre el botón */}
-        <header className="col-span-full flex items-center justify-between gap-4 pt-10 pb-6 lg:row-start-1 lg:pb-8">
+        <header
+          data-hero="header"
+          className="col-span-full flex items-center justify-between gap-4 pt-10 pb-6 lg:row-start-1 lg:pb-8"
+        >
+          {/* El enlace hace de máscara: el texto sube desde su borde inferior */}
           <a
             href="#inicio"
-            className="font-display text-xl italic sm:text-2xl lg:text-3xl"
+            className="-m-1 overflow-hidden p-1 font-display text-xl italic sm:text-2xl lg:text-3xl"
           >
-            Logo
+            <span data-hero="logo" className="block">
+              Logo
+            </span>
           </a>
           <nav aria-label="Principal" className="hidden md:block">
             <ul className="flex gap-6 lg:gap-10 lg:text-lg">
               {enlaces.map((enlace) => (
-                <li key={enlace.href}>
+                <li key={enlace.href} data-hero="enlace">
                   <a
                     href={enlace.href}
                     className="underline-offset-4 hover:underline"
@@ -92,6 +160,7 @@ function Hero() {
             </ul>
           </nav>
           <BotonCompra
+            data-hero="comprar"
             tamano="pequeno"
             decoracion
             esperaRamo={3}
@@ -101,8 +170,10 @@ function Hero() {
           </BotonCompra>
         </header>
 
-        <p className="eyebrow col-span-full mt-6 text-center text-verde lg:row-start-2 lg:mt-4">
-          La boda del año · [Fecha] · [Lugar]
+        {/* Alto fijo y una sola línea: al separarse las letras, el texto
+            crece hacia los lados sin empujar a nadie */}
+        <p className="eyebrow col-span-full mt-6 flex justify-center overflow-hidden text-center leading-normal text-verde sm:h-[1.5em] sm:whitespace-nowrap lg:row-start-2 lg:mt-4">
+          <span data-hero="fecha">La boda del año · [Fecha] · [Lugar]</span>
         </p>
 
         <h1
@@ -139,26 +210,28 @@ function Hero() {
           </span>
         </div>
 
-        <div
-          data-hero="bloque"
-          className="col-span-full flex flex-col items-center gap-6 pt-10 text-center lg:col-span-3 lg:col-start-1 lg:row-start-4 lg:items-start lg:self-end lg:pt-0 lg:pb-16 lg:text-left"
-        >
-          <p className="max-w-md text-lg leading-[1.45] lg:text-xl">
+        <div className="col-span-full flex flex-col items-center gap-6 pt-10 text-center lg:col-span-3 lg:col-start-1 lg:row-start-4 lg:items-start lg:self-end lg:pt-0 lg:pb-16 lg:text-left">
+          <p
+            data-hero="frase"
+            className="max-w-md text-lg leading-[1.45] lg:text-xl"
+          >
             Ceremonia, banquete, discursos, tarta y baile. Todo lo divertido de
             una boda, sin tener que conocer a los novios.
           </p>
-          <BotonCompra>Quiero mi invitación</BotonCompra>
+          <BotonCompra data-hero="boton">Quiero mi invitación</BotonCompra>
         </div>
 
-        <div
-          data-hero="bloque"
-          className="col-span-full flex flex-col items-center gap-3 py-10 text-center lg:col-span-3 lg:col-start-10 lg:row-start-4 lg:items-end lg:self-end lg:pt-0 lg:pb-16 lg:text-right"
-        >
-          <p className="eyebrow text-verde">Los novios</p>
-          <p className="font-display text-3xl text-balance italic xl:text-4xl">
+        <div className="col-span-full flex flex-col items-center gap-3 py-10 text-center lg:col-span-3 lg:col-start-10 lg:row-start-4 lg:items-end lg:self-end lg:pt-0 lg:pb-16 lg:text-right">
+          <p data-hero="dato" className="eyebrow text-verde">
+            Los novios
+          </p>
+          <p
+            data-hero="dato"
+            className="font-display text-3xl text-balance italic xl:text-4xl"
+          >
             ¿Quiénes son? Da igual.
           </p>
-          <p className="text-sm text-verde lg:text-base">
+          <p data-hero="dato" className="text-sm text-verde lg:text-base">
             [Número] invitaciones · plazas limitadas
           </p>
         </div>
