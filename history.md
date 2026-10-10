@@ -4,7 +4,7 @@ Landing para vender invitaciones a una boda enorme en la que nadie se casa. Proy
 
 Este documento recoge qué hay construido, con qué herramientas y por qué se tomó cada decisión. La especificación de diseño completa (textos, medidas y animaciones de cada sección) está en `noWeddingLanding-animaciones.md`; aquí solo se documenta lo ya programado y lo que se aparta de ella.
 
-Última actualización: 8 de octubre de 2026.
+Última actualización: 9 de octubre de 2026.
 
 ## Estado
 
@@ -96,6 +96,9 @@ components/
   ui/
     button.tsx        Botón de shadcn, con el tamaño "pill" añadido
   placeholder.tsx     Hueco de imagen provisional
+  sello-arrastra.tsx  Sello de lacre que hace de cursor en el marquee
+  fondo-card.tsx      Fondo de las cards de la sección 1
+  escenas-concepto.tsx  Las tres escenas animadas de las cards de la sección 1
   star.tsx            Estrella SVG de N puntas
   smooth-scroll.tsx   Lenis sincronizado con ScrollTrigger
   theme-provider.tsx  Tema del andamiaje inicial
@@ -127,6 +130,9 @@ Cada elemento se coloca sobre líneas de columna con las utilidades de Tailwind 
 - **`Star`** — estrella SVG con el número de puntas que se le pida. Se usa la de ocho puntas en el marquee; servirá también para la de 16 (sección 3) y las de 4 (sección 5).
 - **`Button`** — el de shadcn, con el tamaño `pill` añadido. Los botones de compra ya no lo usan: tienen su propio componente.
 - **`BotonCompra`** (`components/boton-compra.tsx`) — botón de compra tipo ticket: cuerpo, línea discontinua en SVG y círculo con flecha. Opciones: `variante` (`oscura` sobre lila y marrón, `clara` sobre beige y verde), `tamano` (`grande` o `pequeno`) y `decoracion` (ramo al pasar el ratón y copas al hacer clic; solo header y footer). Todas las medidas van en `em`, así que el tamaño de letra escala el botón entero. Si no cabe en una línea, el texto se parte en dos en vez de desbordar. La especificación está en `noWeddingLanding-boton-compra.md`.
+- **`SelloArrastra`** (`components/sello-arrastra.tsx`) — sello de lacre que hace de cursor sobre el marquee: cera, brillo, disco, aro, flor y texto circular. Solo pinta; lo anima la sección 1, que llega a sus piezas por los `data-sello` (`cera` y `texto`). La especificación está en `noWeddingLanding-sello-arrastra.md`.
+- **`FondoCard`** (`components/fondo-card.tsx`) — fondo de cada card de la sección 1: número gigante, patrón y grano. Recibe el número; el tono oscuro le llega por la variable `--oscuro` de la card.
+- **`escenas`** (`components/escenas-concepto.tsx`) — las tres escenas de las cards (sobre, regalo y bola). Cada una es un SVG con sus capas marcadas con `data-capa` y una función que devuelve su timeline en pausa. La especificación está en `noWeddingLanding-cards-seccion1.md`.
 - **`SmoothScroll`** — se monta una vez en el layout. No pinta nada. Exporta `irA(ancla)` para bajar a un ancla a mano; lo usa el botón de compra cuando frena el clic para que brinden las copas.
 
 ### Servidor y cliente
@@ -189,9 +195,23 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Exclamaciones del marquee.** "¡" y "!" van en su propio `<span>` y dan un brinco en bucle (suben girando y caen con `bounce.out`), primero la que abre y 0,18 s después la que cierra. Mismo tono que los "?" del hero.
 - **Sin animaciones**, el marquee muestra la pareja de frases una sola vez, centrada y en letra más pequeña, con clases `motion-reduce:`.
 - **Arrastre.** `Draggable` sobre un elemento invisible, con inercia. Al arrastrar se pausa el bucle y se mueve su progreso; al soltar, sigue solo. Solo a partir de 768 px.
-- **Cursor "Arrastra".** Círculo fijo que sigue al ratón con `gsap.quickTo()` y solo se muestra sobre el marquee.
+- **Sello "Arrastra".** Sustituye al círculo marrón. Es un sello de lacre fijo que sigue al ratón con `gsap.quickTo()` y oculta el cursor del sistema sobre el marquee (`cursor: "none"` en el `Draggable`). Solo con ratón (`(hover: hover) and (pointer: fine)`).
+  - **Entrada y salida.** Estampa al entrar (`scale` de 1.4 a 1, `back.out(3)`) y se encoge al salir (`scale: 0`, `power2.in`), con `overwrite: "auto"` para que entrar y salir deprisa no lo deje a medias.
+  - **Texto circular.** Entra en el mismo tween de giro que las estrellas, así que comparte su `timeScale()` y giran siempre a la vez. La flor no gira.
+  - **Al pulsar.** Un tween en pausa encoge la cera (`scale: 0.9`); al soltar se reproduce al revés.
+  - **Inclinación.** Mientras se arrastra, una función en el ticker lee `InertiaPlugin.getVelocity()` y gira el sello entre -20° y 20° con `quickTo`; con el ratón quieto la velocidad cae a cero y se endereza.
+  - **Tres capas, tres transformaciones.** El sello lleva posición, inclinación y la escala de entrada; la cera, la escala del pulsado; el texto, el giro. Así no se pisan.
+  - **Fuera del marquee.** El movimiento se escucha en la ventana, porque `Draggable` sigue al ratón aunque salga de la franja: el sello va con él y se quita al soltar. Con el ratón quieto, el scroll no lanza `mouseenter` ni `mouseleave`, así que en cada evento de scroll se comprueba si el puntero sigue sobre el marquee.
 - **Párrafo.** `SplitText` por palabras; la opacidad pasa de 0.25 a 1 con `ScrollTrigger` y `scrub`.
 - **Cards apiladas.** Solo CSS: `position: sticky` con un `top` distinto por card. La altura de la franja visible (`--franja`) y el primer tope (`--tope`) son variables, más pequeñas en móvil.
+- **Fondo de las cards.** Tres capas detrás del contenido (`FondoCard`): el número gigante en el tono oscuro de la card, que asoma 24 px dentro de la franja visible; un patrón de anillos, estrellas y flores (un `<pattern>` SVG en `currentColor` al 7 %); y el grano, un `feTurbulence` en una imagen de fondo con `mix-blend-mode: overlay` (clase `.grano`). Tamaños y posiciones van en `cqw`, así que el fondo escala con la card.
+- **Recorte del fondo.** El `overflow: hidden` va en la capa del fondo, que hereda el radio de la card, y no en la card. La card lleva `isolate` y el fondo `-z-10` para que quede detrás del contenido sin salirse de ella.
+- **Escenas de las cards.** Tres SVG de 500 × 330 dentro del hueco: el sobre que se abre solo, la caja de regalo de la que solo sale una estrella y la bola de discoteca. Las dos primeras son una timeline con `repeat: -1` y `repeatDelay: 2`; la bola es continua.
+- **Cuándo se reproducen.** Un `ScrollTrigger` por card, de su tope fijo al de la siguiente (la última, hasta el final de la sección); `onToggle` hace `play()` o `pause()`. El tope se lee del `top` calculado de la card, así que vale para escritorio y móvil sin repetir los números.
+- **Solapa del sobre.** Son dos piezas: la de fuera se pliega con `scaleY` hasta el borde del sobre y ahí la releva la de dentro, que está por detrás de la invitación. Una sola pieza no puede estar delante del sobre cerrada y detrás de la invitación abierta.
+- **Sello partido.** El mismo dibujo dos veces, cada uno con un `clipPath` de media grieta. El recorte se mueve con su grupo.
+- **Facetas de la bola.** Una rejilla cuyo brillo se repite cada cuatro columnas; se desplaza ese tramo en bucle dentro de un `clipPath` circular y da la sensación de giro.
+- **Movimiento reducido en las cards.** Cada timeline tiene una etiqueta `fijo` y se deja en pausa ahí: la invitación fuera, la caja abierta con la estrella y la bola quieta.
 - **Salida de la pila.** Cada card lleva un margen inferior de tantas franjas como cards tiene encima. Sin él, la tercera card se soltaba antes que las otras y tapaba sus títulos al salir de la sección.
 - **`overflow: hidden`** va solo en el contenedor del marquee. En la sección rompería el `sticky` de las cards.
 
@@ -500,6 +520,17 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Borde exterior del botón de compra | Marco fino alrededor del cuerpo | Sin marco | Se quitó a petición tras verlo en pantalla |
 | Bloques inferiores del hero | Se apilan por debajo de 768 px | Se apilan por debajo de 1024 px | Con 8 columnas quedaban en 160 px y el botón no cabía |
 | Posición de los "?" | Tercio superior del hueco | Hacia el 36–40 % de su altura | En el tercio superior chocaban con "se casa" |
+| Dibujo del sello "Arrastra" | Capas exportadas de Figma | Dibujado a mano en `SelloArrastra` | No había acceso al archivo de Figma; se sustituye dentro del componente manteniendo los `data-sello` |
+| Texto circular del sello | Grupo `<g>` dentro del mismo SVG, a 71 px del centro | SVG propio encima del sello, con la línea base a 67 px | Un `<svg>` gira sobre su centro igual que las estrellas, sin depender de la caja del texto; con la línea base a 67 las letras quedan centradas en 71 |
+| Tamaño del sello | 170 px | Caja de 200 px con la cera de unos 170 | La caja es el `viewBox` de 200 de la especificación a escala 1:1; el margen deja sitio al borde ondulado |
+| Sello con movimiento reducido | Sigue al cursor con un fundido | No aparece | Sin animaciones el marquee está quieto y no se puede arrastrar: un cursor que dice "Arrastra" engañaría |
+| Flechas del arrastre | Dos círculos con flecha a los lados del sello mientras se arrastra | Sin flechas | Se quitaron a petición tras verlas en pantalla |
+| Aplastamiento al estampar | Opcional (`scaleY: 0.92 → 1`) | Sin hacer | El rebote de `back.out(3)` ya da el golpe; se puede añadir sobre la cera |
+| Ilustraciones de las cards | Pendientes de dibujar; el hueco en blanco | Dibujadas a mano en `escenas-concepto.tsx` | Para poder animarlas ya; se sustituyen manteniendo los nombres de capa en `data-capa` |
+| Capas del sobre | `sobre-solapa` | `sobre-solapa` y `sobre-solapa-abierta` | La solapa tiene que cambiar de profundidad a mitad del giro |
+| Forma recortada de las cards | Círculo de 560 px cortado por la esquina superior derecha | Sin círculo | Se quitó a petición tras verlo en pantalla |
+| Copas de la bola y parallax del número | Opcionales | Sin hacer | — |
+| `overflow: hidden` de la card | En la card | En la capa del fondo | El resultado es el mismo y la card `sticky` no se toca |
 | Bucle del marquee | Helper `horizontalLoop()` de GSAP | Bucle propio con una pista de tres copias | Mucho menos código y el mismo resultado; se cambia si el profesor exige el helper |
 | Separación entre cards | Cards seguidas | 120 y 240 px de margen extra antes de apilarse | Hace que las tres se suelten a la vez al salir |
 | Alto de las cards | 560 px | Unos 496 px | La pila completa cabe en un portátil de 900 px de alto |
@@ -524,7 +555,7 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 |---|---|---|
 | Tipografía Boska | Todos los titulares | Georgia a través de `--font-display` |
 | Ilustración de los novios | Hero | Hueco en blanco |
-| Animaciones de las tres cards | Sección 1 | Hueco en blanco |
+| Ilustraciones definitivas de las tres cards | Sección 1 | Dibujos propios ya animados |
 | Seis fotos o dibujos | Sección 2 | Hueco de color |
 | Imágenes de los momentos | Sección 3 | Hueco en blanco con su forma |
 | Respuestas de las dudas | Sección 5 | Lorem ipsum (salvo la primera) |
@@ -570,3 +601,5 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 8 de octubre de 2026 | Componente `BotonCompra` con sus animaciones, colocado en hero, sección 3, tickets y footer |
 | 8 de octubre de 2026 | Entrada completa del hero: header, logo, menú, botón, fecha y bloques en cascada |
 | 8 de octubre de 2026 | Sección 1: nuevo texto del marquee con estrellas animadas; la card 02 pasa a llamarse "Sin regalo" |
+| 9 de octubre de 2026 | Sección 1: nuevo fondo de las cards (número gigante, patrón y grano) y una escena animada en cada una |
+| 9 de octubre de 2026 | Sección 1: el cursor "Arrastra" pasa a ser un sello de lacre con inclinación y texto que gira con las estrellas |
