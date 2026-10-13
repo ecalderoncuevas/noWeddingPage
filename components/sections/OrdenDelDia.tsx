@@ -255,7 +255,7 @@ function OrdenDelDia() {
               .to(q("[data-plan='eyebrow']"), { color: siguiente.acento }, t)
               .to(
                 q("[data-plan='relleno']"),
-                { scaleX: (i + 1) / momentos.length },
+                { scaleX: (i + 1) / (momentos.length - 1) },
                 t
               )
               .to(puntos[i], { scale: 1 }, t)
@@ -364,14 +364,18 @@ function OrdenDelDia() {
         </div>
 
         <div className="contenedor pt-4 pb-10 lg:pb-14">
-          <div className="relative col-span-full">
-            <div className="absolute inset-x-0 top-0 h-px bg-current opacity-35" />
-            <div
-              data-plan="relleno"
-              style={{ transform: "scaleX(0)" }}
-              className="absolute inset-x-0 -top-px h-[3px] origin-left bg-current"
-            />
-            <ol className="grid grid-cols-5">
+          {/* Cuatro tramos iguales y, al final, una columna del ancho de la
+              última etiqueta: la línea ocupa los tramos y acaba en su punto */}
+          <div className="col-span-full grid grid-cols-[repeat(4,1fr)_auto]">
+            <div className="relative col-span-4 col-start-1 row-start-1">
+              <div className="absolute inset-x-0 top-0 h-px bg-current opacity-35" />
+              <div
+                data-plan="relleno"
+                style={{ transform: "scaleX(0)" }}
+                className="absolute inset-x-0 -top-px h-[3px] origin-left bg-current"
+              />
+            </div>
+            <ol className="col-span-full row-start-1 grid grid-cols-subgrid">
               {momentos.map((momento) => (
                 <li key={momento.slot} className="relative pt-6">
                   <span

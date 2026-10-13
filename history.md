@@ -253,7 +253,7 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Formas del hueco.** Arco, círculo y cápsula son variantes de `Placeholder`. La tarta y la estrella las pinta el componente `Hueco`: la tarta son tres pisos que se reparten la altura con `flex` y una guinda; la estrella reutiliza `Star` con 16 puntas.
 - **Botón de compra.** Solo existe en el último momento: aparece con un fundido junto a la frase de "Baile". El hueco se ajusta al espacio disponible con unidades de contenedor (`cqw` y `cqh`), para no desbordarse en pantallas bajas.
 - **Fondo y texto.** Se anima el `backgroundColor` y el `color` del escenario a la vez. La etiqueta superior tiene su propio color (`acento`): verde sobre los fondos oscuros y marrón sobre los claros.
-- **Progreso.** El relleno crece con `scaleX` desde la izquierda; el punto y el nombre activos cambian de tamaño y opacidad.
+- **Progreso.** El relleno crece con `scaleX` desde la izquierda; el punto y el nombre activos cambian de tamaño y opacidad. La rejilla de la barra tiene cuatro tramos iguales y una última columna del ancho de la etiqueta final (`grid-cols-[repeat(4,1fr)_auto]`): la línea y su relleno ocupan los cuatro tramos y acaban en el punto del último momento, cuya etiqueta llega al borde derecho del contenedor. La lista hereda esas columnas con `subgrid`. Cada transición suma al relleno 1 / (momentos − 1).
 - **Móvil y movimiento reducido.** No se fija nada: los momentos se apilan en vertical, cada uno con su color, y no hay barra de progreso.
 
 ### Sección 4
@@ -630,3 +630,4 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 9 de octubre de 2026 | Sección 1: el cursor "Arrastra" pasa a ser un sello de lacre con inclinación y texto que gira con las estrellas |
 | 13 de octubre de 2026 | Sección 2: nuevo diseño de las polaroids (papel envejecido, detalles y sujeciones) y grano en el fondo |
 | 13 de octubre de 2026 | Sección 2: las polaroids pasan a una ventana fija con cámara que recorre la mesa, con scroll más lento y suave; cada foto aparece cuando la línea llega a ella; etiqueta y titular se encienden palabra a palabra; botón "Recolocar" para las fotos arrastradas |
+| 13 de octubre de 2026 | Sección 3: la línea de progreso ocupa todo el ancho y acaba en el último momento |
