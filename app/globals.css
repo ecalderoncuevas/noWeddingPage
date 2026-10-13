@@ -279,9 +279,11 @@
     }
 }
 
-/* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca */
+/* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca.
+   Igual los tickets de las invitaciones */
 @media (prefers-reduced-motion: no-preference) {
-    [data-hero] {
+    [data-hero],
+    [data-invitaciones="ticket"] {
         visibility: hidden;
     }
 }

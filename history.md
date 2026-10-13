@@ -262,11 +262,28 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Tira.** Una rejilla de tres columnas sin separación. En móvil y tablet (por debajo de 1024 px) los tickets se apilan y "Familia" pasa a ser el primero con `order-first`.
 - **Alturas alineadas con `subgrid`.** La tira define seis filas (serie, nombre, frase, precio, lista y botón) y cada ticket las hereda con `grid-template-rows: subgrid`. Aunque una frase ocupe dos líneas en un ticket, los precios y los botones de los tres quedan a la misma altura.
 - **Muescas y borde dentado.** Se recortan con máscaras CSS (`mask-image` con varios `radial-gradient` y `mask-composite: intersect`), definidas en la clase `.ticket` de `globals.css`. Cada ticket lleva `data-movil` y `data-escritorio` con su posición (`inicio`, `medio` o `fin`), y la máscara cambia con ella: dentado en los extremos de la tira y un cuarto de círculo en cada esquina que toca a otro ticket. Al ser parte del propio ticket, las muescas se mueven con él en el hover.
-- **Líneas de corte.** Un borde discontinuo entre tickets: vertical en escritorio y horizontal al apilar.
+- **Líneas de corte.** Cada una es un elemento propio con borde discontinuo, pegado al canto de un ticket, para poder dibujarlas en la entrada. En la tira las llevan Invitado (a su derecha) y Mesa presidencial (a su izquierda), que entran antes que Familia; al apilar, Familia e Invitado (debajo).
 - **Texto que escala con el ticket.** El nombre y el precio se miden en `cqw`, con un tope en `rem`, para que "Mesa presidencial" quepa en una línea a cualquier ancho.
+- **Peso del texto en "Invitado".** Marrón sobre verde contrasta menos que beige sobre lila o marrón, así que ese ticket lleva la frase, la lista y "por persona" en negrita (700) y la serie y la matriz en 800. Cada ticket declara sus clases de peso (`texto` y `etiqueta`) en el array.
 - **Matriz.** El texto vertical usa `writing-mode: vertical-rl` girado 180°.
-- **Entrada.** `gsap.from` con `y: 60`, `opacity: 0` y `stagger: 0.15`, lanzado por `ScrollTrigger` sin `scrub`: se reproduce una vez, al entrar la tira en pantalla.
-- **Hover.** El ticket sube 12 px y gira un grado. Solo con ratón y desde 1024 px.
+- **Textos.** La misma animación que en las secciones 1 y 2 (`SplitText` por palabras, opacidad de 0.25 a 1 con `scrub`), en dos grupos con su propio `ScrollTrigger`: la cabecera (etiqueta, titular y dato de plazas, seguidos) y la nota final.
+- **Entrada.** Una timeline que se reproduce una sola vez (`ScrollTrigger` con `once: true`, al llegar la tira al 75 % de la pantalla), con el segundo exacto de cada paso, como en el hero. La especificación está en `noWeddingLanding-invitaciones-animacion.md`.
+
+| Segundo | Qué pasa |
+|---|---|
+| 0,0 | Invitado entra desde la izquierda y Mesa presidencial desde la derecha (`x: ∓60`, `autoAlpha`, `power3.out`) |
+| 0,4 | Se dibujan las dos líneas de corte (`scaleY` desde arriba) y se abren las muescas |
+| 0,5 | Familia aparece en el hueco del centro (`y: 30`, `scale: 0.96`) |
+| 0,9 | "La más pedida" cae como un sello (`scale: 1.6 → 1`, `rotation: -12 → -3`, `back.out(3)`) |
+| 1,0 | Los precios cuentan desde 0 |
+
+- **Muescas.** Son agujeros de la máscara del ticket, no elementos, así que no se pueden escalar: se anima su radio, la variable `--m` que usa la máscara, de `0px` a su valor. Al terminar se quita la variable en línea para que vuelva a mandar el CSS.
+- **Precios que cuentan.** Se anima un objeto (`{ valor: 0 }`) con `snap: { valor: 1 }` y en `onUpdate` se escribe en el número. El "€" va fuera de ese número, que mientras cuenta tiene el ancho fijo de su cifra final, para que nada se mueva. El HTML lleva siempre el precio final (y un texto solo para lectores de pantalla): el número se pone a cero al arrancar la timeline, con los tickets aún ocultos.
+- **Estado inicial.** Los tickets esperan con `visibility: hidden` desde CSS (misma regla que `[data-hero]`), solo si el usuario acepta animaciones.
+- **Brillo de Familia.** Una capa del tamaño del ticket con un degradado diagonal (110°, beige al 25 % en una franja de 120 px) y `mix-blend-mode: soft-light`, que cruza de `xPercent: -150` a `150` en 1,2 s y se repite cada 5 s. La máscara del ticket ya la recorta. Solo corre si se cumplen tres cosas a la vez: entrada terminada, sección en pantalla (`ScrollTrigger` con `onToggle`) y ratón fuera del ticket.
+- **Al apilar (menos de 1024 px).** Familia aparece primero, se estampa la etiqueta y suben Invitado y Mesa presidencial; cada precio cuenta al aparecer su ticket y las líneas se dibujan con `scaleX`.
+- **Movimiento reducido.** Los tres tickets aparecen con un fundido; la etiqueta ya está girada por CSS, los precios escritos y no hay brillo.
+- **Hover.** El ticket sube 12 px y gira un grado. Solo con ratón y desde 1024 px, y solo cuando ha terminado la entrada.
 
 ### Sección 5
 
@@ -557,6 +574,8 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Tamaño de las polaroids | 340 px de ancho sobre 1920 | 3 columnas de ancho (unos 324 px sobre 1368) | Es el reparto en columnas que pide la propia especificación; las posiciones verticales se escalaron en proporción |
 | Imagen que sale (sección 3) | Cruza en horizontal hasta `xPercent: -120` | Además se desvanece | Sin el fundido pasaba por encima del texto de la izquierda |
 | Huecos de los momentos 03 y 04 | Relleno marrón al 12 % | Relleno liso (beige y verde) | Es lo que muestran los bocetos de Figma |
+| Entrada al apilar los tickets | Se describe para móvil | Se aplica por debajo de 1024 px, que es donde se apilan | Es el mismo corte que ya tenía la tira |
+| Tear-off hover de los tickets | Opcional | Sin hacer | — |
 | Apilado de los tickets | Por debajo de 768 px | Por debajo de 1024 px | Con 8 columnas cada ticket medía unos 235 px y el contenido no cabía |
 | Tamaño del titular y del precio (sección 4) | 104 px y 112 px | Unos 70 px y 72 px a 1368 | El titular cabe en una línea junto al dato de plazas, y "120 €" cabe con "por persona" al lado |
 | Acordeón de las dudas | Componentes de shadcn donde se pueda | Acordeón propio con GSAP | El de shadcn trae su propia animación de altura, que chocaría con la de GSAP |
@@ -631,3 +650,6 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 13 de octubre de 2026 | Sección 2: nuevo diseño de las polaroids (papel envejecido, detalles y sujeciones) y grano en el fondo |
 | 13 de octubre de 2026 | Sección 2: las polaroids pasan a una ventana fija con cámara que recorre la mesa, con scroll más lento y suave; cada foto aparece cuando la línea llega a ella; etiqueta y titular se encienden palabra a palabra; botón "Recolocar" para las fotos arrastradas |
 | 13 de octubre de 2026 | Sección 3: la línea de progreso ocupa todo el ancho y acaba en el último momento |
+| 13 de octubre de 2026 | Sección 4: más peso en el texto del ticket "Invitado" para que se lea mejor |
+| 13 de octubre de 2026 | Sección 4: la cabecera y la nota final se encienden palabra a palabra |
+| 13 de octubre de 2026 | Sección 4: nueva entrada de los tickets (lados, líneas, sello y precios que cuentan) y brillo en Familia |
