@@ -4,7 +4,7 @@ Landing para vender invitaciones a una boda enorme en la que nadie se casa. Proy
 
 Este documento recoge qué hay construido, con qué herramientas y por qué se tomó cada decisión. La especificación de diseño completa (textos, medidas y animaciones de cada sección) está en `noWeddingLanding-animaciones.md`; aquí solo se documenta lo ya programado y lo que se aparta de ella.
 
-Última actualización: 9 de octubre de 2026.
+Última actualización: 13 de octubre de 2026.
 
 ## Estado
 
@@ -96,6 +96,7 @@ components/
   ui/
     button.tsx        Botón de shadcn, con el tamaño "pill" añadido
   placeholder.tsx     Hueco de imagen provisional
+  polaroid.tsx        Polaroid de la sección 2, con su papel, detalles y sujeción
   sello-arrastra.tsx  Sello de lacre que hace de cursor en el marquee
   fondo-card.tsx      Fondo de las cards de la sección 1
   escenas-concepto.tsx  Las tres escenas animadas de las cards de la sección 1
@@ -133,6 +134,7 @@ Cada elemento se coloca sobre líneas de columna con las utilidades de Tailwind 
 - **`SelloArrastra`** (`components/sello-arrastra.tsx`) — sello de lacre que hace de cursor sobre el marquee: cera, brillo, disco, aro, flor y texto circular. Solo pinta; lo anima la sección 1, que llega a sus piezas por los `data-sello` (`cera` y `texto`). La especificación está en `noWeddingLanding-sello-arrastra.md`.
 - **`FondoCard`** (`components/fondo-card.tsx`) — fondo de cada card de la sección 1: número gigante, patrón y grano. Recibe el número; el tono oscuro le llega por la variable `--oscuro` de la card.
 - **`escenas`** (`components/escenas-concepto.tsx`) — las tres escenas de las cards (sobre, regalo y bola). Cada una es un SVG con sus capas marcadas con `data-capa` y una función que devuelve su timeline en pausa. La especificación está en `noWeddingLanding-cards-seccion1.md`.
+- **`Polaroid`** (`components/polaroid.tsx`) — una polaroid de la sección 2: papel, detalles (manchas, arrugas, caligrafía, matasellos, sello de correos, borde rasgado, polaroid de debajo) y sujeción (celo, celo washi, chincheta o esquineros). Recibe el número, el pie de foto y un objeto `diseno` que dice qué lleva. Solo pinta; la mueve la sección. Exporta también las dos sombras (`SOMBRA` y `SOMBRA_HOVER`) para el hover. La especificación está en `noWeddingLanding-polaroids.md`.
 - **`SmoothScroll`** — se monta una vez en el layout. No pinta nada. Exporta `irA(ancla)` para bajar a un ancla a mano; lo usa el botón de compra cuando frena el clic para que brinden las copas.
 
 ### Servidor y cliente
@@ -217,12 +219,27 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 
 ### Sección 2
 
-- **Mesa.** Las seis polaroids van en un bloque cuadrado del ancho del contenedor y se colocan en porcentajes, así que todo escala con la ventana. El interior de cada polaroid (márgenes y pie de foto) se mide en unidades de contenedor (`cqw`).
-- **Línea de tiempo.** Un único `path` de puntos, siempre visible, tapado por una máscara SVG. La máscara tiene un tramo continuo por cada salto entre polaroids, y lo que se anima con `DrawSVGPlugin` son esos tramos: DrawSVG no dibuja bien una línea discontinua.
-- **Timeline con `scrub`.** Polaroid 1 y, después, cinco veces: tramo de línea, caída de la polaroid (`y: -200`, `scale: 1.2`, giro extra y `back.out(1.4)`) y etiqueta de año. Termina cuando el final de la mesa llega al borde inferior de la ventana.
-- **Dos capas por polaroid.** La exterior (`<figure>`) la mueve el scroll; la interior (el marco) es el `Draggable` y recibe el hover. Si los dos animaran el mismo elemento se pisarían, porque ambos escriben en `transform`.
-- **Arrastre y hover.** Solo a partir de 768 px. Al pulsar una foto sube por encima de las demás; al pasar el ratón se endereza, crece un 5 % y gana sombra.
-- **Móvil.** Una sola columna en zigzag con una línea recta de puntos que se descubre con `clip-path`.
+- **Etiqueta y titular.** La misma animación que el párrafo de la sección 1: `SplitText` por palabras sobre los dos textos a la vez y la opacidad de 0.25 a 1 con `ScrollTrigger` y `scrub`, de modo que se encienden seguidos, primero "Los novios" y luego el titular.
+- **Mesa.** Las seis polaroids, la línea y los años van en un bloque cuadrado y se colocan en porcentajes, así que todo escala junto.
+- **Diseño de las polaroids.** Papel crema o kraft envejecido, cada una con una combinación distinta de detalles y de sujeción, definida en el array `polaroids` de la sección (objeto `diseno`). Miden 340 × 430 con la foto de 300 × 300.
+- **Dibujos en SVG sobre un lienzo de 340 × 430.** Cada polaroid lleva tres SVG con el mismo `viewBox`, que escalan con ella sin media queries: uno bajo la foto (manchas, arrugas y caligrafía), otro encima (matasellos, sello de correos y contorno rasgado) y otro fuera del papel, con `overflow: visible`, para la sujeción que sobresale por arriba. La foto, el pie y los bordes envejecidos son HTML medido en `cqw`.
+- **Manchas sin `blur`.** Son elipses rellenas con un degradado radial que se desvanece: se ven difuminadas sin pagar un filtro en vivo mientras la polaroid se mueve.
+- **Borde rasgado.** Un `clip-path: polygon()` calculado al cargar el módulo: se recorre el contorno cada 10 px y cada punto se mete hacia dentro entre 0,5 y 5 px según una función fija de su posición, así el servidor y el navegador obtienen el mismo dibujo. El mismo polígono se pinta como contorno fino.
+- **Sombra aparte.** La sombra de cada polaroid es un elemento propio detrás del papel (`data-polaroid="sombra"`), porque el `clip-path` del borde rasgado recortaría un `box-shadow` puesto en el papel. Es la que crece en el hover.
+- **Sello de correos perforado.** Un rectángulo beige y, encima, el mismo rectángulo solo con trazo de puntos redondos (`stroke-dasharray: 0 7.125` con `stroke-linecap: round`) del color del papel, que llega por la variable `--papel`: los puntos muerden el borde.
+- **Grano.** La clase `.grano` de las cards de la sección 1, sobre cada papel y, al 12 %, sobre el fondo de la sección.
+- **Pista y ventana.** La mesa va dentro de una ventana a pantalla completa con `position: sticky`, y esta dentro de una pista de 650svh: mientras se recorre la pista, la ventana no se mueve. Las dos van fuera del `.contenedor` para que las fotos entren y salgan por los bordes de la pantalla y no por un corte invisible a 1368 px.
+- **Tamaño de la mesa.** La ventana es un contenedor de tamaño (`container-type: size`) y la mesa mide `min(200cqh, 260cqw)`: una polaroid ocupa unos tres quintos del alto de la ventana a cualquier tamaño de pantalla.
+- **Cámara.** La esquina de la mesa se coloca en el centro de la ventana y una timeline con `scrub` la desplaza con `xPercent` e `yPercent` hasta dejar centrada cada polaroid, en el orden de la línea (1 → 2 → 3, baja, 4 → 5 → 6). Al ir en porcentaje de la propia mesa, no hay que recalcular nada al cambiar el ancho. El efecto copia el componente Polaroid Scroll de Framer.
+- **Ritmo.** Cada salto dura 1 y cada parada sobre una foto `PAUSA` (0.45), con `sine.inOut` para arrancar y frenar despacio. `scrub: 1.5` (constante `SUAVIDAD`) hace que la animación tarde segundo y medio en alcanzar al scroll. El alto de la pista decide cuánto scroll ocupa todo.
+- **Aparición.** Al empezar solo existe la primera polaroid, que aparece con un fundido (`autoAlpha` e `y`, en un `ScrollTrigger` propio) mientras la ventana sube a su sitio. Las demás están ocultas (`autoAlpha: 0`, al 80 % e inclinadas) y cada una aparece cuando la línea llega a su borde: a los 0.75 del salto (`LLEGADA`) empieza a hacerse visible, a enderezarse y a crecer, y termina (`APARICION`, 0.5) ya dentro de la parada. Así la línea se ve llegar hasta el sitio de la foto antes de que esta la tape.
+- **Al dejarla atrás.** La polaroid de la que sale la cámara sigue visible, pero se inclina el triple de su giro y se queda al 90 %.
+- **Línea de tiempo.** Un único `path` de puntos, siempre visible, tapado por una máscara SVG. La máscara tiene un tramo continuo por cada salto, y lo que se anima con `DrawSVGPlugin` son esos tramos, a la vez que viaja la cámara y hasta el centro de la polaroid siguiente: DrawSVG no dibuja bien una línea discontinua. La etiqueta de año salta a mitad de cada salto.
+- **Dos capas por polaroid.** La exterior (`<figure>`) la mueve el scroll; la interior (la pieza que pinta `Polaroid`, con su sujeción y la polaroid de debajo) es el `Draggable` y recibe el hover. Si los dos animaran el mismo elemento se pisarían, porque ambos escriben en `transform`.
+- **Arrastre y hover.** Solo a partir de 768 px. Al pulsar una foto sube por encima de las demás; al pasar el ratón crece un 5 % y gana sombra. Cada foto puede alejarse de su sitio un tercio del ancho de la mesa: el límite es un objeto (`minX`, `maxX`...) y no un elemento, porque `Draggable` mete dentro del elemento límite todo lo que crea, y habría traído a la ventana las fotos que están fuera de pantalla.
+- **Botón "Recolocar".** Fijo abajo en el centro de la ventana. Está oculto y asoma (`autoAlpha` e `y`) en el primer `onDragStart`. Al pulsarlo corta la inercia que quede (`killTweensOf`), devuelve todos los marcos a `x: 0, y: 0` con un pequeño `stagger`, restablece los `z-index` y se vuelve a ocultar. Con `visibility: hidden` tampoco se llega a él con el tabulador. Usa el lenguaje del botón de compra (esquinas de 4 px, línea discontinua interior, mayúsculas espaciadas) en pequeño y con el fondo beige al 80 %.
+- **Móvil.** Una sola columna en zigzag con una línea recta de puntos que se descubre con `clip-path`. Las fotos suben con un fundido (`y: 60`, `power2.out`) y el mismo `scrub: 1.5`.
+- **Movimiento reducido.** No hay pista ni ventana (sus clases llevan `motion-safe:`): la mesa cuadrada se ve entera, del ancho del contenedor, y no se puede arrastrar.
 
 ### Sección 3
 
@@ -303,12 +320,14 @@ Una timeline normal avanza con el tiempo. Con `scrollTrigger: { scrub: true }` a
 
 ```ts
 scrollTrigger: {
-  trigger: mesa,
-  start: "top 70%",        // empieza cuando el borde superior de la mesa llega al 70 % de la ventana
+  trigger: pista,
+  start: "top top",        // empieza cuando el borde superior de la pista llega al de la ventana
   end: "bottom bottom",    // termina cuando su borde inferior toca el de la ventana
-  scrub: true,
+  scrub: 1.5,              // con un número, la animación tarda esos segundos en alcanzar al scroll
 }
 ```
+
+Con `scrub: true` la animación va pegada al scroll; con un número lo sigue con retraso y el movimiento sale más suave.
 
 #### Parámetro de posición de la timeline
 
@@ -323,7 +342,7 @@ En la sección 3, todos los tweens de una transición llevan la misma `t` para q
 #### `from`, `to` y `fromTo`
 
 - `to`: del estado actual al que se indica.
-- `from`: del estado que se indica al actual. GSAP coloca el elemento en el estado inicial nada más crear el tween; por eso las polaroids están ocultas antes de hacer scroll.
+- `from`: del estado que se indica al actual. GSAP coloca el elemento en el estado inicial nada más crear el tween; por eso las etiquetas de año están ocultas antes de hacer scroll.
 - `fromTo`: se fijan los dos extremos. Se usa cuando el estado de partida no es el del CSS, como la imagen que entra desde `xPercent: 120`.
 
 `autoAlpha` es `opacity` más `visibility`: al llegar a 0 pone `visibility: hidden`, y el elemento deja de recibir clics.
@@ -345,7 +364,7 @@ En una máscara, lo blanco deja ver y lo demás tapa. Al ir dibujando el trazo b
 
 #### Dos capas para dos animaciones sobre `transform`
 
-El scroll (la caída de la polaroid) y el arrastre escriben los dos en `transform`. Sobre el mismo elemento, el último en escribir borraría al otro. Cada polaroid tiene por eso dos elementos:
+El scroll (el giro y la escala de la polaroid) y el arrastre escriben los dos en `transform`. Sobre el mismo elemento, el último en escribir borraría al otro. Cada polaroid tiene por eso dos elementos:
 
 ```tsx
 <figure data-novios="polaroid">   {/* la anima la timeline del scroll */}
@@ -360,10 +379,11 @@ Los transforms de padre e hijo se suman, así que una foto arrastrada sigue dond
 ```ts
 Draggable.create(marco, {
   type: "x,y",            // se mueve en los dos ejes
-  bounds: scope.current,  // no puede salir de la sección
+  bounds: { minX: -radio, maxX: radio, minY: -radio, maxY: radio },  // hasta dónde se aleja de su sitio
   inertia: true,          // al soltar sigue un poco (InertiaPlugin)
   zIndexBoost: false,     // el z-index se gestiona a mano...
   onPress: () => gsap.set(foto, { zIndex: ++altura }),  // ...en la capa exterior
+  onDragStart: () => asomar.play(),  // enseña el botón "Recolocar"
 })
 ```
 
@@ -543,7 +563,12 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Inclinación del panel de respuesta | -1.2° | +1.2° en CSS | Figma mide los giros al revés que CSS; así cae hacia la derecha, como en el boceto |
 | Tamaño del nombre gigante del footer | `font-size` en `vw` (unos 15.7vw) | En `cqw` (15cqw) | El contenedor tiene ancho máximo; en `vw` se saldría en pantallas grandes |
 | Marca en el hero y el footer | "[Tu marca]" | "Logo" | Decisión del autor |
-| Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón) | Se acerca más al boceto de Figma mientras no hay ilustraciones |
+| Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón, en dos tonos) | Es lo que fija la especificación de las polaroids mientras no hay ilustraciones |
+| Animación de las polaroids | Caen una a una sobre la mesa, que se ve entera | Ventana fija con una cámara que recorre la mesa de foto en foto | Decisión del autor: se copia el componente Polaroid Scroll de Framer, con un scroll más largo y suave |
+| Hover de las polaroids | La foto se endereza, crece y gana sombra | Solo crece y gana sombra | Ahora la endereza la cámara al enfocarla |
+| Detalles de las polaroids | Papel, manchas, arrugas, caligrafía, matasellos y sello exportados de Figma como imagen | Dibujados a mano en `Polaroid`, en SVG | No había acceso al archivo de Figma; al ser vectores y degradados, sin `blur`, no pesan en las animaciones |
+| Chincheta que salta al arrastrar y `will-change` durante el arrastre | Opcionales | Sin hacer | — |
+| Botón "Recolocar" | No existe | Botón pequeño que devuelve las fotos arrastradas a su sitio | Decisión del autor |
 
 ---
 
@@ -603,3 +628,5 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 8 de octubre de 2026 | Sección 1: nuevo texto del marquee con estrellas animadas; la card 02 pasa a llamarse "Sin regalo" |
 | 9 de octubre de 2026 | Sección 1: nuevo fondo de las cards (número gigante, patrón y grano) y una escena animada en cada una |
 | 9 de octubre de 2026 | Sección 1: el cursor "Arrastra" pasa a ser un sello de lacre con inclinación y texto que gira con las estrellas |
+| 13 de octubre de 2026 | Sección 2: nuevo diseño de las polaroids (papel envejecido, detalles y sujeciones) y grano en el fondo |
+| 13 de octubre de 2026 | Sección 2: las polaroids pasan a una ventana fija con cámara que recorre la mesa, con scroll más lento y suave; cada foto aparece cuando la línea llega a ella; etiqueta y titular se encienden palabra a palabra; botón "Recolocar" para las fotos arrastradas |
