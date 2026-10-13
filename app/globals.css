@@ -231,20 +231,6 @@
     opacity: 0.22;
     }
 
-  /* Panel de respuesta de las dudas: dentado a izquierda y derecha */
-  .panel-dentado {
-    --d: 12px;
-    --paso: 40px;
-    --diente: #0000 var(--d), #000 calc(var(--d) + 0.5px);
-    mask-image:
-      radial-gradient(circle at 0 50%, var(--diente)),
-      radial-gradient(circle at 100% 50%, var(--diente));
-    mask-size: 100% var(--paso);
-    mask-repeat: repeat-y;
-    mask-position: center;
-    mask-composite: intersect;
-    }
-
   @media (min-width: 1024px) {
     .ticket {
       --m: 24px;
@@ -280,10 +266,14 @@
 }
 
 /* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca.
-   Igual los tickets de las invitaciones */
+   Igual los tickets de las invitaciones y lo que entra en las dudas */
 @media (prefers-reduced-motion: no-preference) {
     [data-hero],
-    [data-invitaciones="ticket"] {
+    [data-invitaciones="ticket"],
+    [data-dudas="titular"],
+    [data-dudas="linea"],
+    [data-dudas="nota"],
+    [data-dudas="boton"] {
         visibility: hidden;
     }
 }

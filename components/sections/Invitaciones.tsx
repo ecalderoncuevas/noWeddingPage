@@ -115,25 +115,19 @@ function Invitaciones() {
             return
           }
 
-          // Los textos se encienden palabra a palabra, como en la sección 2:
-          // la cabecera de una vez y la nota final por su cuenta
-          const encender = (textos: Element[], trigger: Element) =>
-            gsap.from(SplitText.create(textos, { type: "words" }).words, {
-              opacity: 0.25,
-              stagger: 0.1,
-              ease: "none",
-              scrollTrigger: {
-                trigger,
-                start: "top 80%",
-                end: "bottom 45%",
-                scrub: true,
-              },
-            })
+          // La cabecera se enciende palabra a palabra, como en la sección 2
           const cabecera = q("[data-invitaciones='texto']")
-          const [nota] = q("[data-invitaciones='nota']")
-
-          encender(cabecera, cabecera[1])
-          encender([nota], nota)
+          gsap.from(SplitText.create(cabecera, { type: "words" }).words, {
+            opacity: 0.25,
+            stagger: 0.1,
+            ease: "none",
+            scrollTrigger: {
+              trigger: cabecera[1],
+              start: "top 80%",
+              end: "bottom 45%",
+              scrub: true,
+            },
+          })
 
           const [invitado, familia, mesa] = tira
           const cortes = q("[data-invitaciones='corte']")
@@ -466,10 +460,7 @@ function Invitaciones() {
           ))}
         </div>
 
-        <p
-          data-invitaciones="nota"
-          className="col-span-full mx-auto mt-8 max-w-[56rem] text-center text-lg leading-[1.45] lg:mt-10 lg:text-xl"
-        >
+        <p className="col-span-full mx-auto mt-8 max-w-[56rem] text-center text-lg leading-[1.45] lg:mt-10 lg:text-xl">
           La invitación no es nominativa: si al final no puedes venir, se la
           pasas a quien quieras. ¿Más dudas? Están justo debajo.
         </p>

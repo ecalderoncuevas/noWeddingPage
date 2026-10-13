@@ -16,7 +16,7 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | 2 | Los novios | `#novios` | `components/sections/Novios.tsx` | Hecha |
 | 3 | El orden del día | `#plan` | `components/sections/OrdenDelDia.tsx` | Hecha |
 | 4 | Invitaciones | `#invitaciones` | `components/sections/Invitaciones.tsx` | Hecha |
-| 5 | Dudas | `#dudas` | `components/sections/Dudas.tsx` | Hecha |
+| 5 | Dudas razonables | `#dudas` | `components/sections/Dudas.tsx` | Hecha |
 | 6 | Footer | — | `components/sections/Footer.tsx` | Hecho |
 
 Las siete piezas están maquetadas y animadas. Lo que falta es contenido definitivo (fuente, imágenes y textos) y los extras opcionales; está en el apartado 6.
@@ -128,7 +128,7 @@ Cada elemento se coloca sobre líneas de columna con las utilidades de Tailwind 
 ### Componentes compartidos
 
 - **`Placeholder`** — hueco en blanco con el tamaño final de la imagen que irá ahí. Recibe ancho y alto (de los que saca la proporción), forma, tono del fondo y una etiqueta. Lleva un `data-slot` con nombre (`hero-novios`, `concepto-card-1`...) para sustituirlo después sin tocar el layout ni las animaciones.
-- **`Star`** — estrella SVG con el número de puntas que se le pida. Se usa la de ocho puntas en el marquee; servirá también para la de 16 (sección 3) y las de 4 (sección 5).
+- **`Star`** — estrella SVG con el número de puntas que se le pida. Se usa la de ocho puntas en el marquee; también la de 16 del último momento (sección 3) y las de 5 de los tickets (sección 4).
 - **`Button`** — el de shadcn, con el tamaño `pill` añadido. Los botones de compra ya no lo usan: tienen su propio componente.
 - **`BotonCompra`** (`components/boton-compra.tsx`) — botón de compra tipo ticket: cuerpo, línea discontinua en SVG y círculo con flecha. Opciones: `variante` (`oscura` sobre lila y marrón, `clara` sobre beige y verde), `tamano` (`grande` o `pequeno`) y `decoracion` (ramo al pasar el ratón y copas al hacer clic; solo header y footer). Todas las medidas van en `em`, así que el tamaño de letra escala el botón entero. Si no cabe en una línea, el texto se parte en dos en vez de desbordar. La especificación está en `noWeddingLanding-boton-compra.md`.
 - **`SelloArrastra`** (`components/sello-arrastra.tsx`) — sello de lacre que hace de cursor sobre el marquee: cera, brillo, disco, aro, flor y texto circular. Solo pinta; lo anima la sección 1, que llega a sus piezas por los `data-sello` (`cera` y `texto`). La especificación está en `noWeddingLanding-sello-arrastra.md`.
@@ -266,7 +266,7 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Texto que escala con el ticket.** El nombre y el precio se miden en `cqw`, con un tope en `rem`, para que "Mesa presidencial" quepa en una línea a cualquier ancho.
 - **Peso del texto en "Invitado".** Marrón sobre verde contrasta menos que beige sobre lila o marrón, así que ese ticket lleva la frase, la lista y "por persona" en negrita (700) y la serie y la matriz en 800. Cada ticket declara sus clases de peso (`texto` y `etiqueta`) en el array.
 - **Matriz.** El texto vertical usa `writing-mode: vertical-rl` girado 180°.
-- **Textos.** La misma animación que en las secciones 1 y 2 (`SplitText` por palabras, opacidad de 0.25 a 1 con `scrub`), en dos grupos con su propio `ScrollTrigger`: la cabecera (etiqueta, titular y dato de plazas, seguidos) y la nota final.
+- **Textos.** La cabecera (etiqueta, titular y dato de plazas, seguidos) lleva la misma animación que en las secciones 1 y 2: `SplitText` por palabras y opacidad de 0.25 a 1 con `scrub`. La nota final no se anima.
 - **Entrada.** Una timeline que se reproduce una sola vez (`ScrollTrigger` con `once: true`, al llegar la tira al 75 % de la pantalla), con el segundo exacto de cada paso, como en el hero. La especificación está en `noWeddingLanding-invitaciones-animacion.md`.
 
 | Segundo | Qué pasa |
@@ -287,14 +287,21 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 
 ### Sección 5
 
-- **Acordeón propio.** Cada pregunta es un `<button>` con `aria-expanded` y `aria-controls`; la respuesta es una región con `aria-labelledby`. Se abre y se cierra con clic o con Tab y Enter.
-- **Estado y animación.** El estado de React (`abierta`) solo guarda qué duda está abierta, para los atributos `aria`. La animación la lanza el propio clic, dentro de `contextSafe`, que es la forma de crear animaciones de GSAP desde un evento para que se limpien al desmontar.
-- **Una sola abierta.** Al abrir una se cierra la anterior en el mismo gesto. La primera empieza abierta.
-- **Altura.** `height` de 0 a `"auto"` con GSAP. Al cerrar, la respuesta pasa a `display: none` para que no quede accesible con el lector de pantalla.
-- **Panel.** Llega inclinándose con rebote (`rotation` de 0 a 1.2, `back.out(2)`) y la flecha gira 180°. El borde dentado es una máscara CSS (`.panel-dentado`), la misma técnica que en los tickets. En móvil no se inclina.
-- **`ScrollTrigger.refresh()`** al terminar de abrir o cerrar, porque cambia el alto de la página y lo que hay debajo se desplaza.
-- **Estrellas.** Giran despacio en bucle (`rotation: 360`, 20 s, `ease: "none"`).
-- **Movimiento reducido.** Las respuestas se abren y cierran al instante y las estrellas no giran.
+Rehecha entera: las preguntas son notas de papel sobre un tablero lila. La especificación está en `noWeddingLanding-dudas.md`.
+
+- **Estructura.** Fondo lila con grano, un marco de línea fina a 24 px de los bordes con la etiqueta vertical "preguntas frecuentes" (solo desde 1024 px), cabecera centrada, rejilla de seis notas (3 columnas desde 1024 px, 2 desde 768 y 1 en móvil) y el botón "¿Otra duda? Escríbenos".
+- **Cada nota.** Un `<li>` (la celda) con una hoja dentro. La pregunta es un `<h3>`. Solo el sello de abajo abre y cierra la nota: es un `<button>` con `aria-expanded` y `aria-controls`, y su `aria-label` une la acción y la pregunta ("Ver respuesta: ¿Puedo ir solo?") para que no haya seis botones con el mismo nombre. La respuesta es una región con `aria-labelledby`, en el HTML desde el principio y con `hidden`.
+- **Crecer sin empujar.** Desde 768 px la celda mide 300 px fijos y la hoja va en `position: absolute` con `min-height: 100%`: al abrirse crece por encima de la nota de debajo (con más `z-index`) y la rejilla no se mueve. En móvil la hoja va en el flujo y sí empuja; al terminar se llama a `ScrollTrigger.refresh()`.
+- **Dos capas, otra vez.** La celda recibe la caída de la entrada y el hover; la hoja, la inclinación y la escala al abrirse. Así no se pisan.
+- **Entrada.** Una timeline que se reproduce una vez (`once: true`, sección al 70 %): el titular sube desde una máscara (`SplitText` con `mask: "lines"`), la línea crece desde el centro (`scaleX`), las notas caen en zigzag (orden 1, 3, 5, 2, 4, 6, con un giro inicial al azar entre -6° y 6° y `back.out(1.6)`), aparecen los sellos "Ver respuesta" y sube el botón. Lo que entra espera con `visibility: hidden` desde CSS.
+- **Sellos de acción.** "Ver respuesta" y "Cerrar" son sellos de tinta lila (doble recuadro, mayúsculas espaciadas y una estrella de cuatro puntas a cada lado, algo torcidos), pintados por el componente `Sello` de la propia sección. Son las dos caras del botón de la nota. Las dos ocupan la misma celda de rejilla y se descubren de izquierda a derecha con `clip-path: inset(0 100% 0 0)` a `inset(0 0% 0 0)`; al abrir se borra uno y aparece el otro.
+- **Abrir y cerrar.** Cada nota abierta tiene su timeline: la hoja se levanta e inclina (-2,5°, 2° o -2° según la columna), el clip cae y se engancha (`back.out(2.5)`), la respuesta crece (`height: 0` a `"auto"`) y aparece línea a línea. Cerrar es la misma timeline con `reverse()` y `timeScale(1.4)`. Solo hay una abierta: al abrir otra, la anterior se cierra.
+- **La timeline se crea al abrir, no al cargar.** Un texto con `hidden` no se puede medir ni partir en líneas, así que la timeline y el `SplitText` se crean en el clic, con la respuesta ya visible, y se destruyen al terminar de cerrarse. Como nacen fuera del contexto de `matchMedia`, se deshacen a mano en su función de limpieza.
+- **Estado.** React solo guarda qué nota está abierta, para `aria-expanded`. El atributo `hidden` de la respuesta lo quita y lo pone el código de la animación; React no lo pisa porque su valor en el JSX no cambia.
+- **Clip.** Un SVG de un solo trazo dibujado a mano, en la esquina superior derecha de la hoja. La pregunta lleva margen derecho para que nunca lo tape.
+- **Estrellas del sello.** Al pasar por él dan media vuelta (`rotation: "+=180"`).
+- **Hover.** Al pasar por el sello, la nota cerrada sube 4 px y gira ±1°; la flecha del botón final sale y vuelve a entrar, como en el botón de compra. Solo con ratón, desde 768 px y con la entrada terminada.
+- **Movimiento reducido.** Las notas aparecen con un fundido; al abrir, la respuesta, el clip y el sello "Cerrar" se muestran directamente.
 
 ### Footer
 
@@ -473,7 +480,7 @@ El mismo array pinta el HTML con `.map()`. Añadir un momento es añadir un obje
 
 Tailwind 4 escribe `rotate-[1.2deg]`, `scale-x-0` o `-translate-x-1/2` en las propiedades CSS `rotate`, `scale` y `translate`, no en `transform`. La primera vez que GSAP toca un elemento, lee esas tres propiedades, las incorpora a su propio `transform` y las deja en `none`. Desde ese momento solo cuenta lo que diga GSAP. Consecuencias:
 
-- la clase sirve como estado inicial, pero no se suma a la animación. El panel de las dudas tiene la clase `md:rotate-[1.2deg]`; para que llegue inclinado hay que animar `rotation` de 0 a 1.2. Animar de -1.2 a 0 lo dejaría recto;
+- la clase sirve como estado inicial, pero no se suma a la animación. La etiqueta "La más pedida" tiene la clase `-rotate-3`; para que quede girada tras estamparse hay que animar `rotation` de -12 a -3. Animar hasta 0 la dejaría recta;
 - un valor en porcentaje (`-translate-1/2`) queda convertido a píxeles en ese momento. Vale para elementos de tamaño fijo, como las etiquetas de año;
 - cuando el valor de partida importa, es más claro ponerlo donde GSAP lo va a escribir: el relleno de la barra de progreso parte de `style={{ transform: "scaleX(0)" }}`.
 
@@ -578,8 +585,13 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Tear-off hover de los tickets | Opcional | Sin hacer | — |
 | Apilado de los tickets | Por debajo de 768 px | Por debajo de 1024 px | Con 8 columnas cada ticket medía unos 235 px y el contenido no cabía |
 | Tamaño del titular y del precio (sección 4) | 104 px y 112 px | Unos 70 px y 72 px a 1368 | El titular cabe en una línea junto al dato de plazas, y "120 €" cabe con "por persona" al lado |
-| Acordeón de las dudas | Componentes de shadcn donde se pueda | Acordeón propio con GSAP | El de shadcn trae su propia animación de altura, que chocaría con la de GSAP |
-| Inclinación del panel de respuesta | -1.2° | +1.2° en CSS | Figma mide los giros al revés que CSS; así cae hacia la derecha, como en el boceto |
+| Notas de las dudas | Componentes de shadcn donde se pueda | Notas propias con GSAP | El acordeón de shadcn trae su propia animación de altura, que chocaría con la de GSAP |
+| Texto de acción de las notas | "pulsa para ver la respuesta" manuscrito, con subrayado de puntos que avanza en el hover | Sellos "Ver respuesta" y "Cerrar", con estrellas que giran en el hover | Cambio de diseño del autor sobre el boceto |
+| Qué abre la nota | La nota entera es el botón | Solo el sello "Ver respuesta" / "Cerrar" | Decisión del autor |
+| Clip de las notas | SVG exportado de Figma | Dibujado a mano en la sección | No había acceso al archivo de Figma |
+| Timeline de cada nota | Creada una sola vez | Creada al abrir y destruida al cerrar | La respuesta oculta no se puede medir ni partir en líneas; así además se adapta si cambia el ancho |
+| Etiqueta vertical en móvil y tablet | Se oculta o pasa a horizontal | Se oculta por debajo de 1024 px | — |
+| Botón "¿Otra duda? Escríbenos" | Sin destino definido | Enlace `mailto:` al correo pendiente | Hay que sustituir `CORREO` en `Dudas.tsx` cuando llegue |
 | Tamaño del nombre gigante del footer | `font-size` en `vw` (unos 15.7vw) | En `cqw` (15cqw) | El contenedor tiene ancho máximo; en `vw` se saldría en pantallas grandes |
 | Marca en el hero y el footer | "[Tu marca]" | "Logo" | Decisión del autor |
 | Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón, en dos tonos) | Es lo que fija la especificación de las polaroids mientras no hay ilustraciones |
@@ -603,7 +615,7 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Seis fotos o dibujos | Sección 2 | Hueco de color |
 | Imágenes de los momentos | Sección 3 | Hueco en blanco con su forma |
 | Respuestas de las dudas | Sección 5 | Lorem ipsum (salvo la primera) |
-| Correo de contacto | Sección 5 | El texto entre corchetes |
+| Correo de contacto | Sección 5 | El botón enlaza a `mailto:[tu correo]` (constante `CORREO`) |
 | Año de la primera polaroid | Sección 2 | La primera polaroid va sin año |
 | Marca, fecha, lugar, hora, ciudad y número de plazas | Hero, sección 4 y footer | "Logo" y los textos entre corchetes |
 | Enlaces de Instagram y TikTok | Footer | Texto sin enlace |
@@ -651,5 +663,6 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 13 de octubre de 2026 | Sección 2: las polaroids pasan a una ventana fija con cámara que recorre la mesa, con scroll más lento y suave; cada foto aparece cuando la línea llega a ella; etiqueta y titular se encienden palabra a palabra; botón "Recolocar" para las fotos arrastradas |
 | 13 de octubre de 2026 | Sección 3: la línea de progreso ocupa todo el ancho y acaba en el último momento |
 | 13 de octubre de 2026 | Sección 4: más peso en el texto del ticket "Invitado" para que se lea mejor |
-| 13 de octubre de 2026 | Sección 4: la cabecera y la nota final se encienden palabra a palabra |
+| 13 de octubre de 2026 | Sección 4: la cabecera se enciende palabra a palabra |
 | 13 de octubre de 2026 | Sección 4: nueva entrada de los tickets (lados, líneas, sello y precios que cuentan) y brillo en Familia |
+| 13 de octubre de 2026 | Sección 5 rehecha: notas de papel que se abren con clip, entrada en zigzag y botón de contacto |
