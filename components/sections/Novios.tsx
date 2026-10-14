@@ -8,6 +8,7 @@ import {
   SOMBRA,
   SOMBRA_HOVER,
 } from "@/components/polaroid"
+import { escenasPolaroid } from "@/components/escenas-polaroid"
 import { Draggable, gsap, SplitText, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -201,6 +202,32 @@ function Novios() {
           const mascaras = q("[data-novios='tramo']")
           const mesa = q("[data-novios='mesa']")[0]
 
+          // Escenas de las fotos: cada una con su timeline en pausa. Solo se
+          // mueve si su polaroid ya ha caído y está en pantalla. La pantalla
+          // se vigila con un IntersectionObserver y no con ScrollTrigger,
+          // porque las fotos se arrastran y cambian de sitio
+          const escenas = q("[data-polaroid='foto']").map((foto, i) =>
+            escenasPolaroid[i].animar(foto)
+          )
+          const caida = escenas.map(() => false)
+          const vista = escenas.map(() => false)
+          const animar = (i: number) =>
+            escenas[i].paused(!(caida[i] && vista[i]))
+          const caer = (i: number, encima: boolean) => {
+            caida[i] = encima
+            animar(i)
+          }
+          const observador = new IntersectionObserver(
+            (cambios) =>
+              cambios.forEach((cambio) => {
+                const i = fotos.indexOf(cambio.target as HTMLElement)
+                vista[i] = cambio.isIntersecting
+                animar(i)
+              }),
+            { threshold: 0.2 }
+          )
+          fotos.forEach((foto) => observador.observe(foto))
+
           if (!escritorio) {
             const tl = gsap.timeline({
               defaults: { ease: "power2.out", duration: 1 },
@@ -218,6 +245,12 @@ function Novios() {
                 opacity: 0,
                 rotation: polaroids[i].giro + (i % 2 ? 6 : -6),
               })
+              // Al pasar por aquí hacia abajo la foto ya ha caído; hacia arriba, no
+              tl.call(
+                () => caer(i, (tl.scrollTrigger?.direction ?? 1) > 0),
+                undefined,
+                tl.duration()
+              )
               if (i) {
                 tl.from(
                   etiquetas[i - 1],
@@ -235,7 +268,7 @@ function Novios() {
               },
               0
             )
-            return
+            return () => observador.disconnect()
           }
 
           // La cámara: la mesa se desplaza para dejar cada polaroid en el
@@ -273,6 +306,8 @@ function Novios() {
                 start: "top 80%",
                 end: "top 20%",
                 scrub: SUAVIDAD,
+                onLeave: () => caer(0, true),
+                onEnterBack: () => caer(0, false),
               },
             }
           )
@@ -316,6 +351,12 @@ function Novios() {
                 etiquetas[i - 1],
                 { scale: 0, opacity: 0, duration: 0.3, ease: "back.out(2)" },
                 t + 0.5
+              )
+              // La escena arranca cuando la foto termina de aparecer
+              .call(
+                () => caer(i, (tl.scrollTrigger?.direction ?? 1) > 0),
+                undefined,
+                t + LLEGADA + APARICION
               )
           }
           tl.to({}, { duration: PAUSA })
@@ -375,13 +416,16 @@ function Novios() {
 
             const sombra = marco.querySelector("[data-polaroid='sombra']")
 
+            // Al pasar el ratón, la escena se acelera
             const entrar = () => {
               gsap.to(marco, { scale: 1.05, duration: 0.3 })
               gsap.to(sombra, { boxShadow: SOMBRA_HOVER, duration: 0.3 })
+              gsap.to(escenas[i], { timeScale: 1.6, duration: 0.3 })
             }
             const salir = () => {
               gsap.to(marco, { scale: 1, duration: 0.3 })
               gsap.to(sombra, { boxShadow: SOMBRA, duration: 0.3 })
+              gsap.to(escenas[i], { timeScale: 1, duration: 0.3 })
             }
 
             marco.addEventListener("mouseenter", entrar)
@@ -394,6 +438,7 @@ function Novios() {
           })
 
           return () => {
+            observador.disconnect()
             boton.removeEventListener("click", recolocar)
             limpiar.forEach((quitar) => quitar())
           }
@@ -478,44 +523,49 @@ function Novios() {
               className="absolute top-0 bottom-24 left-1/2 -translate-x-1/2 border-l-4 border-dashed border-lila md:hidden"
             />
 
-            {polaroids.map((polaroid, i) => (
-              <div key={polaroid.pie} className="contents">
-                <figure
-                  data-novios="polaroid"
-                  style={
-                    {
-                      "--x": `${polaroid.x}%`,
-                      "--y": `${polaroid.y}%`,
-                      transform: `rotate(${polaroid.giro}deg)`,
-                    } as React.CSSProperties
-                  }
-                  className={cn(
-                    "@container relative w-[64%] md:absolute md:top-(--y) md:left-(--x) md:w-[23.68%]",
-                    i % 2 ? "self-end" : "self-start"
-                  )}
-                >
-                  <Polaroid
-                    numero={i + 1}
-                    pie={polaroid.pie}
-                    diseno={polaroid.diseno}
-                  />
-                </figure>
-                {anos[i] && (
-                  <span
-                    data-novios="ano"
+            {polaroids.map((polaroid, i) => {
+              const { Escena } = escenasPolaroid[i]
+              return (
+                <div key={polaroid.pie} className="contents">
+                  <figure
+                    data-novios="polaroid"
                     style={
                       {
-                        "--x": `${anos[i].x}%`,
-                        "--y": `${anos[i].y}%`,
+                        "--x": `${polaroid.x}%`,
+                        "--y": `${polaroid.y}%`,
+                        transform: `rotate(${polaroid.giro}deg)`,
                       } as React.CSSProperties
                     }
-                    className="relative self-center rounded-full bg-lila px-4 py-1.5 text-sm font-semibold text-beige md:absolute md:top-(--y) md:left-(--x) md:-translate-1/2 lg:px-5 lg:text-base"
+                    className={cn(
+                      "@container relative w-[64%] md:absolute md:top-(--y) md:left-(--x) md:w-[23.68%]",
+                      i % 2 ? "self-end" : "self-start"
+                    )}
                   >
-                    {anos[i].ano}
-                  </span>
-                )}
-              </div>
-            ))}
+                    <Polaroid
+                      numero={i + 1}
+                      pie={polaroid.pie}
+                      diseno={polaroid.diseno}
+                    >
+                      <Escena />
+                    </Polaroid>
+                  </figure>
+                  {anos[i] && (
+                    <span
+                      data-novios="ano"
+                      style={
+                        {
+                          "--x": `${anos[i].x}%`,
+                          "--y": `${anos[i].y}%`,
+                        } as React.CSSProperties
+                      }
+                      className="relative self-center rounded-full bg-lila px-4 py-1.5 text-sm font-semibold text-beige md:absolute md:top-(--y) md:left-(--x) md:-translate-1/2 lg:px-5 lg:text-base"
+                    >
+                      {anos[i].ano}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           {/* Mismo lenguaje que el botón de compra (ticket con línea

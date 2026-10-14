@@ -1,10 +1,15 @@
 "use client"
 
+import Image from "next/image"
 import { useRef } from "react"
 
 import { BotonCompra } from "@/components/boton-compra"
-import { Placeholder } from "@/components/placeholder"
-import { Star } from "@/components/star"
+import { evento } from "@/lib/datos-evento"
+import baile from "@/public/plan/baile.png"
+import banquete from "@/public/plan/banquete.png"
+import ceremonia from "@/public/plan/ceremonia.png"
+import discursos from "@/public/plan/discursos.png"
+import tarta from "@/public/plan/tarta.png"
 import { gsap, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -16,17 +21,14 @@ const beige = "#f1f0e2"
 // Los cinco momentos del día; la timeline se genera a partir de este array
 const momentos = [
   {
-    hora: "15:30",
+    hora: evento.hora,
     nombre: "Ceremonia",
     frase: "Lágrimas, arroz y un «sí, quiero» que no compromete a nadie.",
     fondo: lila,
     texto: beige,
     acento: verde,
-    slot: "plan-ceremonia",
-    forma: "arch",
-    hueco: "",
-    ancho: 540,
-    alto: 700,
+    imagen: ceremonia,
+    alt: "Dos novios con un interrogante sobre la cabeza, bajo un arco de flores",
   },
   {
     hora: "17:00",
@@ -36,11 +38,8 @@ const momentos = [
     fondo: marron,
     texto: beige,
     acento: verde,
-    slot: "plan-banquete",
-    forma: "circle",
-    hueco: "",
-    ancho: 600,
-    alto: 600,
+    imagen: banquete,
+    alt: "Una mesa de banquete vista desde arriba, con platos, copas y manos que se sirven",
   },
   {
     hora: "19:00",
@@ -50,11 +49,8 @@ const momentos = [
     fondo: verde,
     texto: lila,
     acento: marron,
-    slot: "plan-discursos",
-    forma: "capsule",
-    hueco: "bg-beige text-marron",
-    ancho: 400,
-    alto: 700,
+    imagen: discursos,
+    alt: "Dos manos con un cartel de «no» y una copa, a los lados de un micrófono",
   },
   {
     hora: "20:00",
@@ -64,11 +60,8 @@ const momentos = [
     fondo: beige,
     texto: lila,
     acento: marron,
-    slot: "plan-tarta",
-    forma: "tarta",
-    hueco: "",
-    ancho: 540,
-    alto: 660,
+    imagen: tarta,
+    alt: "Una tarta de cinco pisos con los novios arriba y una novia que se escapa por un lado",
   },
   {
     hora: "21:00",
@@ -78,11 +71,8 @@ const momentos = [
     fondo: lila,
     texto: beige,
     acento: verde,
-    slot: "plan-baile",
-    forma: "star",
-    hueco: "",
-    ancho: 620,
-    alto: 620,
+    imagen: baile,
+    alt: "Invitados bailando bajo una bola de discoteca, entre confeti",
   },
 ] as const
 
@@ -93,62 +83,21 @@ const total = numero(momentos.length - 1)
 const capa = (i: number) =>
   i ? "invisible col-start-1 row-start-1" : "col-start-1 row-start-1"
 
-// La estrella y la tarta no son formas simples de Placeholder
-function Hueco({
+// Ilustración del momento: sin fondo, sobre el color de la sección
+function Ilustracion({
   momento,
-  slot,
   className,
 }: {
   momento: (typeof momentos)[number]
-  slot: string
   className?: string
 }) {
-  if (momento.forma === "star") {
-    return (
-      <div
-        data-slot={slot}
-        className={cn(
-          "relative flex aspect-square w-full items-center justify-center",
-          className
-        )}
-      >
-        <Star
-          points={16}
-          inner={0.82}
-          className="absolute inset-0 size-full text-beige/12"
-        />
-        <span className="relative text-xs tracking-[0.18em] uppercase opacity-70">
-          Imagen o ilustración
-        </span>
-      </div>
-    )
-  }
-
-  if (momento.forma !== "tarta") {
-    return (
-      <Placeholder
-        slot={slot}
-        width={momento.ancho}
-        height={momento.alto}
-        shape={momento.forma}
-        className={cn(momento.hueco, className)}
-      />
-    )
-  }
-
   return (
-    <div
-      data-slot={slot}
-      style={{ aspectRatio: `${momento.ancho} / ${momento.alto}` }}
-      className={cn("flex w-full flex-col items-center", className)}
-    >
-      <span className="mb-[1.85%] aspect-square w-[11.1%] rounded-full bg-lila" />
-      <span className="min-h-0 w-[40.7%] flex-[170] rounded-3xl bg-verde" />
-      <span className="min-h-0 w-[70.4%] flex-[200] rounded-3xl bg-verde" />
-      <span className="flex min-h-0 w-full flex-[220] items-center justify-center rounded-3xl bg-verde text-xs tracking-[0.18em] text-marron uppercase">
-        Imagen o ilustración
-      </span>
-    </div>
+    <Image
+      src={momento.imagen}
+      alt={momento.alt}
+      sizes="(min-width: 1024px) 36vw, (min-width: 768px) 45vw, 20rem"
+      className={cn("h-auto w-full", className)}
+    />
   )
 }
 
@@ -299,7 +248,7 @@ function OrdenDelDia() {
             <span className="inline-grid overflow-hidden">
               {momentos.map((momento, i) => (
                 <span
-                  key={momento.slot}
+                  key={momento.nombre}
                   data-plan="contador"
                   className={capa(i)}
                 >
@@ -321,7 +270,7 @@ function OrdenDelDia() {
                   className="inline-grid justify-items-start overflow-hidden"
                 >
                   {momentos.map((momento, i) => (
-                    <span key={momento.slot} className={capa(i)}>
+                    <span key={momento.nombre} className={capa(i)}>
                       {momento.hora[posicion]}
                     </span>
                   ))}
@@ -330,14 +279,18 @@ function OrdenDelDia() {
             </p>
             <p className="-mt-[0.2em] grid overflow-hidden font-display text-[min(6.8vw,6.125rem,12svh)] leading-[1.25] italic">
               {momentos.map((momento, i) => (
-                <span key={momento.slot} data-plan="nombre" className={capa(i)}>
+                <span
+                  key={momento.nombre}
+                  data-plan="nombre"
+                  className={capa(i)}
+                >
                   {momento.nombre}
                 </span>
               ))}
             </p>
             <div className="mt-4 grid max-w-[32rem] text-lg leading-[1.45] lg:text-2xl">
               {momentos.map((momento, i) => (
-                <p key={momento.slot} data-plan="frase" className={capa(i)}>
+                <p key={momento.nombre} data-plan="frase" className={capa(i)}>
                   {momento.frase}
                 </p>
               ))}
@@ -350,14 +303,14 @@ function OrdenDelDia() {
           <div className="[container-type:size] col-span-4 col-start-5 grid place-items-center self-stretch lg:col-span-5 lg:col-start-8">
             {momentos.map((momento, i) => (
               <div
-                key={momento.slot}
+                key={momento.nombre}
                 data-plan="imagen"
                 style={{
-                  width: `min(100cqw, 100cqh * ${momento.ancho / momento.alto})`,
+                  width: `min(100cqw, 100cqh * ${momento.imagen.width / momento.imagen.height})`,
                 }}
                 className={capa(i)}
               >
-                <Hueco momento={momento} slot={momento.slot} />
+                <Ilustracion momento={momento} />
               </div>
             ))}
           </div>
@@ -377,7 +330,7 @@ function OrdenDelDia() {
             </div>
             <ol className="col-span-full row-start-1 grid grid-cols-subgrid">
               {momentos.map((momento) => (
-                <li key={momento.slot} className="relative pt-6">
+                <li key={momento.nombre} className="relative pt-6">
                   <span
                     data-plan="punto"
                     className="absolute top-0 left-0 size-2.5 -translate-y-1/2 rounded-full bg-current"
@@ -399,7 +352,7 @@ function OrdenDelDia() {
       <div className="md:motion-safe:hidden">
         {momentos.map((momento, i) => (
           <div
-            key={momento.slot}
+            key={momento.nombre}
             style={{ backgroundColor: momento.fondo, color: momento.texto }}
             className="py-16"
           >
@@ -424,9 +377,8 @@ function OrdenDelDia() {
                   Quiero mi invitación
                 </BotonCompra>
               )}
-              <Hueco
+              <Ilustracion
                 momento={momento}
-                slot={`${momento.slot}-movil`}
                 className="col-span-full mx-auto mt-8 max-w-xs"
               />
             </div>

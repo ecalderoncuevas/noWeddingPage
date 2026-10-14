@@ -20,21 +20,36 @@ const cards = [
   {
     numero: "01",
     titulo: "Sin invitación de nadie",
+    entrada: "Aquí la invitación te la mandas tú.",
     descripcion:
-      "No necesitas que nadie te invite: la compras tú. Ven solo, en pareja o con amigos.",
+      "En una boda normal hay que esperar a que alguien se acuerde de ti. Aquí no: compras tu invitación y llegas con tu nombre ya escrito en la tarjeta de la mesa. Ven solo, en pareja o con el grupo entero.",
+    datos: ["Solo", "En pareja", "Con amigos"],
+    // Marrón sobre verde contrasta menos que beige sobre lila o marrón: más peso
+    pesos: {
+      entrada: "font-medium",
+      texto: "font-semibold",
+      datos: "font-extrabold",
+    },
     colores: "bg-verde text-marron [--oscuro:#9b9e77]",
   },
   {
     numero: "02",
     titulo: "Sin regalo",
-    descripcion: "No hay regalo, ni sobre, ni que quedar bien con nadie.",
+    entrada: "Ni lista de bodas ni sobre en el bolsillo.",
+    descripcion:
+      "Nadie va a comprobar cuánto has puesto ni qué vajilla has elegido. La invitación ya lo incluye todo: lo único que tienes que traer son ganas de brindar por una pareja que acabas de conocer.",
+    datos: ["Sin sobre", "Sin lista", "Sin quedar bien"],
+    pesos: { entrada: "", texto: "", datos: "font-semibold" },
     colores: "bg-lila text-beige [--oscuro:#5b2842]",
   },
   {
     numero: "03",
     titulo: "Solo lo divertido",
+    entrada: "Nos quedamos con la parte buena.",
     descripcion:
-      "Comer, brindar y bailar. La parte buena de una boda, sin la otra.",
+      "Ceremonia corta, banquete largo, discursos que no te tocan y una pista abierta hasta que cierren. Sin suegros, sin fotos de grupo eternas y sin tener que hacer de testigo de nadie.",
+    datos: ["Comer", "Brindar", "Bailar"],
+    pesos: { entrada: "", texto: "", datos: "font-semibold" },
     colores: "bg-marron text-beige [--oscuro:#452f25]",
   },
 ] as const
@@ -475,9 +490,43 @@ function Concepto() {
                 <h3 className="self-center font-display text-[clamp(1.25rem,5.4vw,2.5rem)] leading-none font-bold lg:col-span-6">
                   {card.titulo}
                 </h3>
-                <p className="col-span-full text-lg leading-[1.45] lg:col-span-5 lg:col-start-2 lg:self-end lg:pb-12 lg:text-[1.375rem]">
-                  {card.descripcion}
-                </p>
+                <div className="col-span-full lg:col-span-5 lg:col-start-2 lg:self-end lg:pb-12">
+                  <p
+                    className={cn(
+                      "font-display text-[clamp(1.5rem,2.3vw,2.125rem)] leading-[1.1] italic",
+                      card.pesos.entrada
+                    )}
+                  >
+                    {card.entrada}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-4 text-base leading-[1.5] lg:mt-5 lg:text-lg",
+                      card.pesos.texto
+                    )}
+                  >
+                    {card.descripcion}
+                  </p>
+                  <ul
+                    className={cn(
+                      "mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tracking-[0.18em] uppercase lg:mt-7 lg:text-sm",
+                      card.pesos.datos
+                    )}
+                  >
+                    {card.datos.map((dato, j) => (
+                      <li key={dato} className="flex items-center gap-3">
+                        {j > 0 && (
+                          <Star
+                            points={4}
+                            inner={0.3}
+                            className="size-[0.7em]"
+                          />
+                        )}
+                        {dato}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
                 <div className="col-span-full my-6 aspect-500/330 self-end overflow-hidden rounded-[28px] bg-current/14 lg:col-span-5 lg:col-start-8 lg:row-start-2 lg:mt-0 lg:mb-12">
                   <Escena />
                 </div>

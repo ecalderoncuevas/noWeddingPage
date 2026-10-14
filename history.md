@@ -96,16 +96,21 @@ components/
     OrdenDelDia.tsx
   ui/
     button.tsx        Botón de shadcn, con el tamaño "pill" añadido
-  placeholder.tsx     Hueco de imagen provisional
+  placeholder.tsx     Hueco de imagen provisional (ya sin uso)
   polaroid.tsx        Polaroid de la sección 2, con su papel, detalles y sujeción
   sello-arrastra.tsx  Sello de lacre que hace de cursor en el marquee
   fondo-card.tsx      Fondo de las cards de la sección 1
+  novios-hero.tsx     Ilustración de los novios del hero
   escenas-concepto.tsx  Las tres escenas animadas de las cards de la sección 1
+  escenas-polaroid.tsx  Las seis escenas animadas de las fotos de las polaroids (sección 2)
   footer-relleno.tsx  Dibujos de los laterales del footer (tarta, bola, botella, corcho y estrellas)
   star.tsx            Estrella SVG de N puntas
   smooth-scroll.tsx   Lenis sincronizado con ScrollTrigger
   theme-provider.tsx  Tema del andamiaje inicial
+public/
+  plan/               Ilustraciones de los cinco momentos de la sección 3, sin fondo
 lib/
+  datos-evento.ts     Marca, fecha, hora, lugar, ciudad, plazas y correo del evento
   gsap.ts             Registro único de los plugins de GSAP
   utils.ts            Reexporta `cn`
 ```
@@ -129,13 +134,14 @@ Cada elemento se coloca sobre líneas de columna con las utilidades de Tailwind 
 
 ### Componentes compartidos
 
-- **`Placeholder`** — hueco en blanco con el tamaño final de la imagen que irá ahí. Recibe ancho y alto (de los que saca la proporción), forma, tono del fondo y una etiqueta. Lleva un `data-slot` con nombre (`hero-novios`, `concepto-card-1`...) para sustituirlo después sin tocar el layout ni las animaciones.
-- **`Star`** — estrella SVG con el número de puntas que se le pida. Se usa la de ocho puntas en el marquee; también la de 16 del último momento (sección 3) y las de 5 de los tickets (sección 4).
+- **`Placeholder`** — hueco en blanco con el tamaño final de la imagen que irá ahí. Recibe ancho y alto (de los que saca la proporción), forma, tono del fondo y una etiqueta. Lleva un `data-slot` con nombre (`hero-novios`, `concepto-card-1`...) para sustituirlo después sin tocar el layout ni las animaciones. Ya no lo usa ninguna sección: todos los huecos tienen su imagen.
+- **`Star`** — estrella SVG con el número de puntas que se le pida. Se usa la de ocho puntas en el marquee, las de 5 de los tickets (sección 4) y las de 4 de las cards, las dudas y el footer.
 - **`Button`** — el de shadcn, con el tamaño `pill` añadido. Los botones de compra ya no lo usan: tienen su propio componente.
 - **`BotonCompra`** (`components/boton-compra.tsx`) — botón de compra tipo ticket: cuerpo, línea discontinua en SVG y círculo con flecha. Opciones: `variante` (`oscura` sobre lila y marrón, `clara` sobre beige y verde), `tamano` (`grande` o `pequeno`) y `decoracion` (ramo al pasar el ratón y copas al hacer clic; solo header y footer). Todas las medidas van en `em`, así que el tamaño de letra escala el botón entero. Si no cabe en una línea, el texto se parte en dos en vez de desbordar. La especificación está en `noWeddingLanding-boton-compra.md`.
 - **`SelloArrastra`** (`components/sello-arrastra.tsx`) — sello de lacre que hace de cursor sobre el marquee: cera, brillo, disco, aro, flor y texto circular. Solo pinta; lo anima la sección 1, que llega a sus piezas por los `data-sello` (`cera` y `texto`). La especificación está en `noWeddingLanding-sello-arrastra.md`.
 - **`FondoCard`** (`components/fondo-card.tsx`) — fondo de cada card de la sección 1: número gigante, patrón y grano. Recibe el número; el tono oscuro le llega por la variable `--oscuro` de la card.
 - **`escenas`** (`components/escenas-concepto.tsx`) — las tres escenas de las cards (sobre, regalo y bola). Cada una es un SVG con sus capas marcadas con `data-capa` y una función que devuelve su timeline en pausa. La especificación está en `noWeddingLanding-cards-seccion1.md`.
+- **`escenasPolaroid`** (`components/escenas-polaroid.tsx`) — las seis escenas de las fotos de las polaroids. Cada una es un SVG de 300 × 300 con sus capas marcadas con `data-capa` y una función que devuelve su timeline en pausa. La especificación está en `noWeddingLanding-polaroids-escenas.md`.
 - **`Polaroid`** (`components/polaroid.tsx`) — una polaroid de la sección 2: papel, detalles (manchas, arrugas, caligrafía, matasellos, sello de correos, borde rasgado, polaroid de debajo) y sujeción (celo, celo washi, chincheta o esquineros). Recibe el número, el pie de foto y un objeto `diseno` que dice qué lleva. Solo pinta; la mueve la sección. Exporta también las dos sombras (`SOMBRA` y `SOMBRA_HOVER`) para el hover. La especificación está en `noWeddingLanding-polaroids.md`.
 - **Relleno del footer** (`components/footer-relleno.tsx`) — tarta, bola de discoteca, botella, trayecto del corcho, estrellas y anillos. Solo pintan; los anima el footer, que llega a sus piezas por los `data-footer`. Exporta también la función `meridianos()`, que dibuja las facetas de la bola girada un ángulo. La especificación está en `noWeddingLanding-footer-relleno.md`.
 - **`SmoothScroll`** — se monta una vez en el layout. No pinta nada. Exporta `irA(ancla)` para bajar a un ancla a mano; lo usa el botón de compra cuando frena el clic para que brinden las copas.
@@ -169,18 +175,19 @@ Con `prefers-reduced-motion: reduce` no se arranca Lenis ni ninguna animación: 
 
 ### Hero
 
-Una única timeline al cargar. Cada paso lleva su segundo exacto como posición absoluta (`tl.from(..., 0.4)`), para poder mover uno sin descuadrar los demás. La especificación está en `noWeddingLanding-hero-entrada.md`.
+Una única timeline al cargar. Cada paso lleva su segundo exacto como posición absoluta (`tl.from(..., 0.4)`), para poder mover uno sin descuadrar los demás. La especificación está en `noWeddingLanding-hero-entrada.md`, con los cambios de `noWeddingLanding-hero-relleno.md` (logo, ilustración de los novios y datos definitivos).
 
 | Segundo | Qué pasa |
 |---|---|
 | 0,0 | Baja el header (`yPercent: -100`) |
-| 0,2 | El logo sube desde una máscara (su enlace lleva `overflow: hidden`) y los enlaces del menú suben uno tras otro (`y: 12`, `autoAlpha: 0`, `stagger: 0.06`) |
+| 0,2 | Se dibujan los anillos del logo (`drawSVG`, 0,6 s, el segundo 0,15 s después), el texto del logo sube desde una máscara y los enlaces del menú suben uno tras otro (`y: 12`, `autoAlpha: 0`, `stagger: 0.06`) |
 | 0,4 | Botón "Comprar invitación": aparece el cuerpo y se dibuja la línea discontinua; a los 0,7 entra el texto y a los 0,85 salta el círculo de la flecha (`back.out(2)`) |
 | 0,5 | "La boda del año": las letras pasan de `letter-spacing: 0.6em` a su sitio mientras aparecen |
 | 0,6 | El titular entra línea a línea (`SplitText` por líneas con máscara, `yPercent: 100`, `stagger: 0.15`) |
-| 1,1 | Sube el hueco de los novios (`y: 60`, `opacity: 0`) |
+| 1,1 | Los novios se dibujan a línea (`drawSVG`, 1,2 s, `stagger: 0.04`, `power2.inOut`); a los 1,4 sus rellenos pasan de `fill-opacity: 0` a 1 |
 | 1,4 | Bloques inferiores en cascada (`y: 20`, `autoAlpha: 0`, `stagger: 0.08`): a la izquierda el párrafo línea a línea y luego el botón; a la derecha sus tres textos |
-| 1,8 | Saltan los "?" (`scale: 0`, `back.out(2)`) y a los 2,5 se quedan flotando en bucle |
+| 1,9 | Florece el ramo: cada flor crece desde su centro (`back.out(2.5)`, `stagger: 0.06`) |
+| 2,0 | Saltan los "?" de las caras (`scale: 0`, `rotation: -20`, `back.out(2)`) |
 
 Detalles:
 
@@ -191,7 +198,19 @@ Detalles:
 
 Para que no se vea el contenido un instante antes de que arranque la animación, los elementos con `data-hero` empiezan ocultos por CSS (solo si el usuario acepta animaciones) y la timeline los hace visibles al empezar.
 
-El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; así se monta sobre la parte baja del titular sin `position: absolute`. Por eso el header, la etiqueta y el titular llevan la fila fijada a mano: sin ella, la colocación automática de la rejilla mandaba el titular debajo del hueco.
+La ilustración de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; así se apoya en el borde inferior del hero, justo bajo "se casa", sin `position: absolute`. Por eso el header, la etiqueta y el titular llevan la fila fijada a mano: sin ella, la colocación automática de la rejilla mandaba el titular debajo de los novios.
+
+- **Logo.** Dos anillos entrelazados en SVG (verde, trazo de 3 px) y "**Boda** *ajena*" como texto real, sacado de `evento.marca`. Es un enlace a `#inicio` con `aria-label`.
+- **Hover del header.** Los enlaces del menú llevan una línea fina (`::after`) que crece desde la izquierda al pasar el ratón o recibir el foco y se recoge hacia la derecha al salir: se cambia el `transform-origin` en el hover. En el logo, una timeline en pausa gira los anillos 180° (son simétricos, así que acaban como empezaron) y aparta el texto 3 px; al salir se reproduce al revés. También con el foco del teclado; sin animaciones no hay giro.
+- **Ilustración** (`components/novios-hero.tsx`). Dibujo a línea con el mismo estilo que los novios del footer, calcado del boceto: trazo beige de 4 px (3 en los detalles), relleno lila para tapar lo de detrás, pajarita verde y ramo de cinco flores. Va por delante del titular (`z-10`) y mide `clamp(300px, 26vw, 560px)`; en móvil, 300 px encima de los bloques de texto. Lleva `role="img"` y `aria-label`.
+- **Dibujo y relleno.** Lo que se dibuja lleva `data-trazo`. DrawSVG anima el trazo y no el relleno, así que los rellenos empiezan con `fill-opacity: 0` y aparecen cuando la línea ya va por la mitad.
+- **Bucles** (empiezan al terminar la entrada y se pausan con el hero fuera de pantalla). Los "?" flotan (`y` y `rotation` de -6 a 6, 3 s); el segundo va 1,5 s por detrás y espera ya en un extremo para no dar un salto al empezar. Los novios se mecen ±1,5° desde su base y en sentidos contrarios, como si se acercaran y se separaran. Cada flor sube y baja 2 px con su propia duración, entre 1,6 y 2,4 s.
+- **Profundidad con el ratón.** Solo desde 1024 px y con ratón: titular 4 px, novios 10 px y "?" 14 px (van dentro de los novios y suman 4 a sus 10). La profundidad mueve el contenedor y los bucles, el dibujo de dentro.
+- **Movimiento reducido.** Los novios aparecen ya dibujados con un fundido; sin bucles ni profundidad.
+
+### Datos del evento
+
+Marca, fecha, hora, lugar, ciudad, plazas y correo están en `lib/datos-evento.ts` (objeto `evento`) y los importan el hero, el orden del día (hora de la ceremonia), las invitaciones, las dudas (correo) y el footer. Se cambian en un solo sitio.
 
 ### Sección 1
 
@@ -208,6 +227,7 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
   - **Tres capas, tres transformaciones.** El sello lleva posición, inclinación y la escala de entrada; la cera, la escala del pulsado; el texto, el giro. Así no se pisan.
   - **Fuera del marquee.** El movimiento se escucha en la ventana, porque `Draggable` sigue al ratón aunque salga de la franja: el sello va con él y se quita al soltar. Con el ratón quieto, el scroll no lanza `mouseenter` ni `mouseleave`, así que en cada evento de scroll se comprueba si el puntero sigue sobre el marquee.
 - **Párrafo.** `SplitText` por palabras; la opacidad pasa de 0.25 a 1 con `ScrollTrigger` y `scrub`.
+- **Texto de las cards.** Cada card tiene, bajo el título, una frase de entrada en cursiva de titulares, un párrafo que la explica y tres datos cortos en mayúsculas separados por estrellas de cuatro puntas ("Solo · En pareja · Con amigos", "Sin sobre · Sin lista · Sin quedar bien", "Comer · Brindar · Bailar"). Están en el array `cards` (`entrada`, `descripcion` y `datos`). Ocupan el hueco libre de la izquierda, así que en escritorio la card no crece. Como en el ticket "Invitado", la card verde lleva más peso (frase 500, párrafo 600 y datos 800), porque el marrón sobre verde contrasta menos; cada card declara sus pesos en `pesos`.
 - **Cards apiladas.** Solo CSS: `position: sticky` con un `top` distinto por card. La altura de la franja visible (`--franja`) y el primer tope (`--tope`) son variables, más pequeñas en móvil.
 - **Fondo de las cards.** Tres capas detrás del contenido (`FondoCard`): el número gigante en el tono oscuro de la card, que asoma 24 px dentro de la franja visible; un patrón de anillos, estrellas y flores (un `<pattern>` SVG en `currentColor` al 7 %); y el grano, un `feTurbulence` en una imagen de fondo con `mix-blend-mode: overlay` (clase `.grano`). Tamaños y posiciones van en `cqw`, así que el fondo escala con la card.
 - **Recorte del fondo.** El `overflow: hidden` va en la capa del fondo, que hereda el radio de la card, y no en la card. La card lleva `isolate` y el fondo `-z-10` para que quede detrás del contenido sin salirse de ella.
@@ -241,6 +261,14 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Dos capas por polaroid.** La exterior (`<figure>`) la mueve el scroll; la interior (la pieza que pinta `Polaroid`, con su sujeción y la polaroid de debajo) es el `Draggable` y recibe el hover. Si los dos animaran el mismo elemento se pisarían, porque ambos escriben en `transform`.
 - **Arrastre y hover.** Solo a partir de 768 px. Al pulsar una foto sube por encima de las demás; al pasar el ratón crece un 5 % y gana sombra. Cada foto puede alejarse de su sitio un tercio del ancho de la mesa: el límite es un objeto (`minX`, `maxX`...) y no un elemento, porque `Draggable` mete dentro del elemento límite todo lo que crea, y habría traído a la ventana las fotos que están fuera de pantalla.
 - **Botón "Recolocar".** Fijo abajo en el centro de la ventana. Está oculto y asoma (`autoAlpha` e `y`) en el primer `onDragStart`. Al pulsarlo corta la inercia que quede (`killTweensOf`), devuelve todos los marcos a `x: 0, y: 0` con un pequeño `stagger`, restablece los `z-index` y se vuelve a ocultar. Con `visibility: hidden` tampoco se llega a él con el tabulador. Usa el lenguaje del botón de compra (esquinas de 4 px, línea discontinua interior, mayúsculas espaciadas) en pequeño y con el fondo beige al 80 %.
+- **Escenas de las fotos.** Cada foto es una escena dibujada a línea con los novios en monigote (cabeza con "?", pajarita verde él, moño ella), copiada del SVG `polaroids-escenas.svg`: la lluvia bajo el paraguas, el cine, el paseo de noche, el perro, la pedida con fuegos artificiales y la «boda» bajo el arco. `Polaroid` las recibe como `children` y las recorta con `overflow: hidden`, también al arrastrar. Las figuras no se mueven; se anima el fondo.
+- **Animaciones de cada escena.** Lluvia en mosaico sin cortes y ondas en el charco; parpadeo del proyector (con `repeatRefresh`, cada vuelta distinta), brillo de la pantalla y palomitas que saltan; estrellas que titilan, farola que late y luna que flota; cola del perro, corazones que suben y pelota que bota y se aplasta; fuegos artificiales dibujados con `drawSVG` y destello del anillo; confeti que cae girando y flores del arco que se mecen.
+- **Lluvia sin cortes.** El grupo de gotas se repite como un mosaico: 300 px a la derecha y, en la fila de arriba, 128 px más a la derecha (la inclinación de las gotas). Todo baja un tramo (`x: "-=128"`, `y: "+=300"`) en bucle; al repetirse, cada copia ocupa el sitio de otra. Con solo la copia de arriba que proponía la especificación quedaban huecos en las esquinas a mitad del tramo, así que son cuatro copias.
+- **Confeti a media caída.** Cada trozo empieza en un punto distinto de su caída: se coloca en la timeline de la escena entre los segundos 0 y 5, y la timeline arranca adelantada a los 5 (`seek`). Cada trozo va en su grupo, para que su giro dibujado y el de la caída no se pisen.
+- **Fuegos.** Cada rayo sale del centro (`drawSVG: "0% 100%"`) y se aleja hasta desaparecer (`"100% 100%"`); al acabar se ocultan, porque con largo cero las puntas redondas dejaban un anillo de puntos.
+- **Cuándo se mueven.** Cada escena se reproduce solo si su polaroid ya ha caído y está en pantalla. La caída la marca un `call` en la timeline de la cámara, al terminar de aparecer la foto, que mira la dirección del scroll; la primera, el `onLeave` de su fundido. La pantalla se vigila con un `IntersectionObserver` (`threshold: 0.2`) y no con `ScrollTrigger`, porque las fotos se arrastran y cambian de sitio. En móvil, igual, con un `call` al terminar de subir cada foto.
+- **Hover.** Al pasar el ratón por una foto, su escena se acelera (`timeScale` a 1,6) y vuelve a 1 al salir.
+- **Movimiento reducido.** No se crea ninguna timeline: las escenas se ven quietas, en su primer fotograma.
 - **Móvil.** Una sola columna en zigzag con una línea recta de puntos que se descubre con `clip-path`. Las fotos suben con un fundido (`y: 60`, `power2.out`) y el mismo `scrub: 1.5`.
 - **Movimiento reducido.** No hay pista ni ventana (sus clases llevan `motion-safe:`): la mesa cuadrada se ve entera, del ancho del contenedor, y no se puede arrastrar.
 
@@ -253,7 +281,8 @@ El hueco de los novios ocupa las filas 3 y 4 de la rejilla y se alinea abajo; as
 - **Nombre y contador.** El mismo movimiento vertical que la hora, dentro de una máscara.
 - **Frase.** Fundido cruzado con un poco de desplazamiento.
 - **Imagen.** La que sale se va a la izquierda girando y desvaneciéndose; la que entra llega desde fuera de la pantalla por la derecha (`x: "60vw"`, en unidades de ventana para que ninguna forma asome antes de tiempo, por estrecha que sea).
-- **Formas del hueco.** Arco, círculo y cápsula son variantes de `Placeholder`. La tarta y la estrella las pinta el componente `Hueco`: la tarta son tres pisos que se reparten la altura con `flex` y una guinda; la estrella reutiliza `Star` con 16 puntas.
+- **Ilustraciones.** Cada momento tiene su ilustración (la pareja bajo el arco, la mesa del banquete, el micrófono con el cartel de «no», la tarta y el baile), en `public/plan/`. Se importan de forma estática, así que `next/image` conoce su ancho y alto, y el hueco usa esa proporción: `width: min(100cqw, 100cqh * ancho / alto)`.
+- **Sin fondo y con la paleta de la landing.** Las originales eran dibujos claros sobre un morado oscuro. Un script con el lienzo del navegador las pasó a PNG con transparencia: cada píxel es más transparente cuanto más se parece al fondo, y su color se cambia por el de la paleta según su tipo (claro, verde o rojizo). Sobre lila y marrón el dibujo queda en beige, verde y rosa; sobre verde (Discursos) y beige (Tarta), en lila y marrón, para que se lea. La tarta va en verde, como su hueco anterior. Lo que tocaba el borde de la imagen se desvanece en vez de quedar cortado, y cada una se recortó a su contenido.
 - **Botón de compra.** Solo existe en el último momento: aparece con un fundido junto a la frase de "Baile". El hueco se ajusta al espacio disponible con unidades de contenedor (`cqw` y `cqh`), para no desbordarse en pantallas bajas.
 - **Fondo y texto.** Se anima el `backgroundColor` y el `color` del escenario a la vez. La etiqueta superior tiene su propio color (`acento`): verde sobre los fondos oscuros y marrón sobre los claros.
 - **Progreso.** El relleno crece con `scaleX` desde la izquierda; el punto y el nombre activos cambian de tamaño y opacidad. La rejilla de la barra tiene cuatro tramos iguales y una última columna del ancho de la etiqueta final (`grid-cols-[repeat(4,1fr)_auto]`): la línea y su relleno ocupan los cuatro tramos y acaban en el punto del último momento, cuya etiqueta llega al borde derecho del contenedor. La lista hereda esas columnas con `subgrid`. Cada transición suma al relleno 1 / (momentos − 1).
@@ -605,7 +634,7 @@ Recursos que se repiten:
 
 ### Imágenes
 
-Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño definitivo: beige al 12 % sobre fondos oscuros y marrón al 12 % sobre fondos claros, con una etiqueta pequeña que deja claro que es intencionado.
+Ya no queda ningún hueco provisional. Todas las imágenes van en la paleta de la landing y sin fondo, sobre el color de su sección: dibujos a línea en SVG (novios del hero, escenas de las cards y de las polaroids, footer) e ilustraciones en PNG con transparencia (orden del día).
 
 ---
 
@@ -619,7 +648,6 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Colores de los botones de los tickets | Un color distinto por ticket | Las dos variantes del botón de compra | Lo fija la especificación del botón |
 | Borde exterior del botón de compra | Marco fino alrededor del cuerpo | Sin marco | Se quitó a petición tras verlo en pantalla |
 | Bloques inferiores del hero | Se apilan por debajo de 768 px | Se apilan por debajo de 1024 px | Con 8 columnas quedaban en 160 px y el botón no cabía |
-| Posición de los "?" | Tercio superior del hueco | Hacia el 36–40 % de su altura | En el tercio superior chocaban con "se casa" |
 | Dibujo del sello "Arrastra" | Capas exportadas de Figma | Dibujado a mano en `SelloArrastra` | No había acceso al archivo de Figma; se sustituye dentro del componente manteniendo los `data-sello` |
 | Texto circular del sello | Grupo `<g>` dentro del mismo SVG, a 71 px del centro | SVG propio encima del sello, con la línea base a 67 px | Un `<svg>` gira sobre su centro igual que las estrellas, sin depender de la caja del texto; con la línea base a 67 las letras quedan centradas en 71 |
 | Tamaño del sello | 170 px | Caja de 200 px con la cera de unos 170 | La caja es el `viewBox` de 200 de la especificación a escala 1:1; el margen deja sitio al borde ondulado |
@@ -636,7 +664,7 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Alto de las cards | 560 px | Unos 496 px | La pila completa cabe en un portátil de 900 px de alto |
 | Tamaño de las polaroids | 340 px de ancho sobre 1920 | 3 columnas de ancho (unos 324 px sobre 1368) | Es el reparto en columnas que pide la propia especificación; las posiciones verticales se escalaron en proporción |
 | Imagen que sale (sección 3) | Cruza en horizontal hasta `xPercent: -120` | Además se desvanece | Sin el fundido pasaba por encima del texto de la izquierda |
-| Huecos de los momentos 03 y 04 | Relleno marrón al 12 % | Relleno liso (beige y verde) | Es lo que muestran los bocetos de Figma |
+| Imágenes del orden del día | Formas de arco, círculo, cápsula, tarta y estrella | Ilustraciones del autor, sin fondo y con los colores de la landing | Decisión del autor |
 | Entrada al apilar los tickets | Se describe para móvil | Se aplica por debajo de 1024 px, que es donde se apilan | Es el mismo corte que ya tenía la tira |
 | Tear-off hover de los tickets | Opcional | Sin hacer | — |
 | Apilado de los tickets | Por debajo de 768 px | Por debajo de 1024 px | Con 8 columnas cada ticket medía unos 235 px y el contenido no cabía |
@@ -647,7 +675,7 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Clip de las notas | SVG exportado de Figma | Dibujado a mano en la sección | No había acceso al archivo de Figma |
 | Timeline de cada nota | Creada una sola vez | Creada al abrir y destruida al cerrar | La respuesta oculta no se puede medir ni partir en líneas; así además se adapta si cambia el ancho |
 | Etiqueta vertical en móvil y tablet | Se oculta o pasa a horizontal | Se oculta por debajo de 1024 px | — |
-| Botón "¿Otra duda? Escríbenos" | Sin destino definido | Enlace `mailto:` al correo pendiente | Hay que sustituir `CORREO` en `Dudas.tsx` cuando llegue |
+| Botón "¿Otra duda? Escríbenos" | Sin destino definido | Enlace `mailto:` al correo pendiente | Hay que cambiar `correo` en `lib/datos-evento.ts` cuando llegue |
 | Dibujos del footer | SVG `footer-v2-boceto-marron.svg` exportado de Figma | Dibujados a mano en `Footer.tsx`, calcados del PNG | No se recibió el SVG; se sustituyen manteniendo los nombres de capa en `data-capa` |
 | Posición de los novios del footer | Coordenadas del diseño | Recolocados sobre las letras de Boska | Con Boska, "NADIE" es más estrecho que en el diseño (2,6em frente a 3,2em) a la misma altura de mayúscula |
 | Rúbrica de "se" | Sin animación | Se dibuja con `DrawSVG` en la entrada | Si estuviera desde el principio, se vería sola mientras suben las letras |
@@ -659,8 +687,10 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Relleno en móvil | Tarta pequeña junto al cartel, o se oculta | Se oculta todo el relleno | En móvil el cartel ocupa el ancho |
 | Datos del footer | Desde el borde de la pantalla (100 px a 1920) | Dentro del contenedor de 1368 px | Regla de la rejilla del profesor; solo el hilo, las manos y el fotomatón llegan a los bordes |
 | Textos de la navegación y la fila legal | Letra de palo | Boska | Toda la landing va en Boska |
-| Marca en el hero | "[Tu marca]" | "Logo" | Decisión del autor; el footer nuevo usa "[Tu marca]", como su especificación |
-| Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón, en dos tonos) | Es lo que fija la especificación de las polaroids mientras no hay ilustraciones |
+| Ilustración y logo del hero | SVG `hero-relleno-capas.svg` | Dibujados a mano en `novios-hero.tsx` y en el header, calcados del boceto | No se recibió el SVG |
+| Grosor del "?" de las caras | Cursiva de titulares | Cursiva de Boska, peso normal | Es lo que pide la especificación; el boceto lo muestra con otra fuente |
+| Pelota de la escena del perro | A los pies de ella; si el matasellos la tapa, 20 px a la izquierda | A los pies de él, a la izquierda | Movida 20 px seguía bajo el matasellos y sus ondas cruzaban el bote |
+| Lluvia de la escena 1 | Grupo de gotas y una copia | Cuatro copias en mosaico | Con una sola copia quedaban huecos en las esquinas a mitad del tramo |
 | Animación de las polaroids | Caen una a una sobre la mesa, que se ve entera | Ventana fija con una cámara que recorre la mesa de foto en foto | Decisión del autor: se copia el componente Polaroid Scroll de Framer, con un scroll más largo y suave |
 | Hover de las polaroids | La foto se endereza, crece y gana sombra | Solo crece y gana sombra | Ahora la endereza la cámara al enfocarla |
 | Detalles de las polaroids | Papel, manchas, arrugas, caligrafía, matasellos y sello exportados de Figma como imagen | Dibujados a mano en `Polaroid`, en SVG | No había acceso al archivo de Figma; al ser vectores y degradados, sin `blur`, no pesan en las animaciones |
@@ -675,14 +705,11 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 
 | Qué | Dónde afecta | Mientras tanto |
 |---|---|---|
-| Ilustración de los novios | Hero | Hueco en blanco |
 | Ilustraciones definitivas de las tres cards | Sección 1 | Dibujos propios ya animados |
-| Seis fotos o dibujos | Sección 2 | Hueco de color |
-| Imágenes de los momentos | Sección 3 | Hueco en blanco con su forma |
 | Respuestas de las dudas | Sección 5 | Lorem ipsum (salvo la primera) |
-| Correo de contacto | Sección 5 | El botón enlaza a `mailto:[tu correo]` (constante `CORREO`) |
+| Correo de contacto | Sección 5 y footer | `[tu correo]` (campo `correo` de `lib/datos-evento.ts`) |
+| Ciudad definitiva | Footer | Barcelona, pendiente de confirmar (campo `ciudad`) |
 | Año de la primera polaroid | Sección 2 | La primera polaroid va sin año |
-| Marca, fecha, lugar, hora, ciudad, correo y número de plazas | Hero, sección 4 y footer | "Logo", "[Tu marca]" y los textos entre corchetes |
 | Fotos del fotomatón | Footer | Hueco de color con el cartel escrito |
 | Columnas y canal que fija el profesor | Toda la página | 12 columnas y 24 px de canal |
 
@@ -728,6 +755,11 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | 13 de octubre de 2026 | Sección 4: la cabecera se enciende palabra a palabra |
 | 13 de octubre de 2026 | Sección 4: nueva entrada de los tickets (lados, líneas, sello y precios que cuentan) y brillo en Familia |
 | 13 de octubre de 2026 | Sección 5 rehecha: notas de papel que se abren con clip, entrada en zigzag y botón de contacto |
+| 14 de octubre de 2026 | Sección 3: ilustraciones de los cinco momentos en lugar de las formas, sin fondo y con la paleta de la landing |
+| 14 de octubre de 2026 | Sección 2: escenas animadas en las seis fotos de las polaroids, que se mueven solo cuando su foto ha caído y está en pantalla |
+| 14 de octubre de 2026 | Sección 1: texto completo en las tres cards (entrada, párrafo y datos) |
+| 14 de octubre de 2026 | Hero: hover discreto en los enlaces del menú y en el logo |
+| 14 de octubre de 2026 | Hero: logo "Boda ajena", ilustración de los novios dibujada a línea con ramo, bucles y profundidad; datos del evento en `lib/datos-evento.ts`, compartidos con el resto de la landing |
 | 14 de octubre de 2026 | Footer: relleno de los laterales con tarta, bola de discoteca que gira, botella cuyo corcho vuela hasta la copa de la novia, estrellas y anillos |
 | 14 de octubre de 2026 | Footer rehecho: cartel *save the date* con los novios, hilo elástico con corazón entre dos manos, fotomatón que imprime sus fotos, bucles y profundidad con el ratón |
 | 14 de octubre de 2026 | Revisión de la tipografía: se quitan Inter y Geist Mono del andamiaje y `font-sans` / `font-heading` pasan a Boska; corrección del historial |

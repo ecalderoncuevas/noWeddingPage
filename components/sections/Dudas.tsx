@@ -3,6 +3,7 @@
 import { useRef, useState } from "react"
 
 import { Star } from "@/components/star"
+import { evento } from "@/lib/datos-evento"
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -16,15 +17,12 @@ const dudas = [
     respuesta:
       "Nadie. Los novios son actores y el «sí, quiero» no tiene validez. Todo lo demás es de verdad: la comida, la barra y el baile.",
   },
-  { pregunta: "¿Puedo ir solo?", respuesta: lorem },
-  { pregunta: "¿Hay dress code?", respuesta: lorem },
-  { pregunta: "¿Qué incluye la invitación?", respuesta: lorem },
-  { pregunta: "¿Puedo dar un discurso?", respuesta: lorem },
-  { pregunta: "¿Qué pasa si al final no puedo ir?", respuesta: lorem },
+  { pregunta: "¿Puedo ir solo?", respuesta: "¡Por supuesto! Es lo ideal. Aquí nadie te va a sentar en la mesa de los niños ni preguntarte para cuándo lo tuyo. Ven a tu aire, únete a la conga con desconocidos o quédate en la barra. Prometemos que no serás el único." },
+  { pregunta: "¿Hay dress code?", respuesta: "Sí, traje de gala. Queremos la experiencia completa, así que saca el traje o el vestido largo para el fotomatón. Solo dos normas: no vengas de blanco (la novia es muy suya) y trae zapatos cómodos para el baile." },
+  { pregunta: "¿Qué incluye la invitación?", respuesta: "Todo lo bueno, nada de lo malo. Incluye cóctel, banquete, barra libre y recena. Lo que te ahorras es: pagar el regalo por compromiso, aguantar a familiares lejanos y fingir que te cae bien la gente de tu mesa." },
+  { pregunta: "¿Puedo dar un discurso?", respuesta: "Gracias por el entusiasmo, pero no. Hemos venido a evitar precisamente los discursos interminables y los vídeos con fotos de la infancia. El objetivo es comer, brindar y bailar, sin pausas dramáticas." },
+  { pregunta: "¿Qué pasa si al final no puedo ir?", respuesta: "No podemos devolverte el dinero, pero puedes cederla. Tenemos que pagar los menús por adelantado, así que no hay reembolsos. Como las invitaciones no tienen nombre, puedes dársela o vendérsela al amigo que nunca se pierde una fiesta." },
 ]
-
-// Pendiente de recibir
-const CORREO = "[tu correo]"
 
 // Las notas caen en zigzag, no en fila
 const CAIDA = [0, 2, 4, 1, 3, 5]
@@ -531,7 +529,7 @@ function Dudas() {
 
         <a
           data-dudas="boton"
-          href={`mailto:${CORREO}`}
+          href={`mailto:${evento.correo}`}
           className="col-span-full mt-16 inline-flex items-center gap-3 justify-self-center rounded-full bg-verde px-8 py-5 leading-none font-semibold tracking-[0.12em] text-marron uppercase outline-offset-4 outline-beige focus-visible:outline-2 lg:mt-24 lg:text-lg"
         >
           ¿Otra duda? Escríbenos

@@ -15,6 +15,7 @@ import {
   Tarta,
   Trayecto,
 } from "@/components/footer-relleno"
+import { evento } from "@/lib/datos-evento"
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -925,7 +926,7 @@ function Footer() {
             ))}
           </ol>
           <p className="py-[1.5cqw] text-center font-manuscrita text-sm leading-none md:py-[3cqw] md:text-[8cqw]">
-            [Fecha]
+            [{evento.fecha}]
           </p>
         </div>
       </div>
@@ -975,7 +976,7 @@ function Footer() {
         >
           Reserva tu sitio en
           <br />
-          [tu correo]
+          {evento.correo}
         </p>
 
         <div
@@ -998,7 +999,7 @@ function Footer() {
             </ul>
           </nav>
           <p className="mt-3 text-[clamp(0.9375rem,1vw,1.1875rem)] tracking-[0.1em]">
-            [Fecha] | 18:00
+            {evento.fecha} | {evento.hora}
           </p>
         </div>
 
@@ -1006,16 +1007,16 @@ function Footer() {
           data-footer="entrada"
           className="col-span-full mt-8 text-center font-manuscrita text-[clamp(1.75rem,1.77vw,2.25rem)] leading-[1.15] lg:col-span-3 lg:mt-16 lg:text-right"
         >
-          [Lugar],
+          {evento.lugar},
           <br />
-          [Ciudad]
+          {evento.ciudad}
         </p>
 
         <div
           data-footer="entrada"
           className="col-span-full mt-12 flex flex-col items-center gap-2 border-t border-beige/30 pt-6 text-center text-sm md:flex-row md:justify-between md:text-left lg:mt-14"
         >
-          <p className="font-semibold text-verde">[Tu marca] © 2026</p>
+          <p className="font-semibold text-verde">{evento.marca} © 2026</p>
           <p className="text-beige/60">
             Aviso: en este evento no se casa nadie. De verdad.
           </p>

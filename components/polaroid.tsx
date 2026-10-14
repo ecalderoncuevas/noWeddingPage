@@ -1,4 +1,3 @@
-import { Placeholder } from "@/components/placeholder"
 import { cn } from "@/lib/utils"
 
 // Todos los dibujos van sobre un lienzo de 340 × 430 (la polaroid de la
@@ -198,10 +197,13 @@ function Polaroid({
   numero,
   pie,
   diseno,
+  children,
 }: {
   numero: number
   pie: string
   diseno: Diseno
+  // Lo que va en el hueco de la foto: la escena de la sección
+  children: React.ReactNode
 }) {
   const manchas = `polaroid-mancha-${numero}`
 
@@ -276,16 +278,17 @@ function Polaroid({
         <div className="absolute inset-0 shadow-[inset_0_0_4.1cqw_rgb(122_94_62/0.25)]" />
 
         <div className="absolute top-[4.65%] left-[5.88%] w-[88.24%]">
-          <Placeholder
-            slot={`polaroid-${numero}`}
-            width={300}
-            height={300}
-            label="Foto o ilustración"
+          {/* La escena no se sale de la foto, tampoco al arrastrar */}
+          <div
+            data-polaroid="foto"
             className={cn(
-              "shadow-[inset_0_0.6cqw_2.4cqw_rgb(0_0_0/0.4)] [&>span]:text-[2.9cqw] [&>span]:tracking-normal [&>span]:normal-case",
+              "relative aspect-square overflow-hidden",
               diseno.foto
             )}
-          />
+          >
+            {children}
+            <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0.6cqw_2.4cqw_rgb(0_0_0/0.4)]" />
+          </div>
         </div>
 
         <svg viewBox={VISTA} aria-hidden className="absolute inset-0 size-full">

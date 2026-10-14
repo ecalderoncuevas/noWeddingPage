@@ -4,6 +4,7 @@ import { useRef } from "react"
 
 import { BotonCompra } from "@/components/boton-compra"
 import { Star } from "@/components/star"
+import { evento } from "@/lib/datos-evento"
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -334,7 +335,7 @@ function Invitaciones() {
           data-invitaciones="texto"
           className="col-span-full font-semibold lg:col-span-3 lg:self-end lg:pb-2 lg:text-right"
         >
-          [Número] invitaciones · plazas limitadas
+          {evento.plazas} invitaciones · plazas limitadas
         </p>
 
         {/* Las filas se comparten con subgrid para que precios y botones
