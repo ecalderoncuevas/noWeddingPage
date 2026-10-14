@@ -12,8 +12,8 @@
     --color-verde: var(--verde);
     --color-beige: var(--beige);
     --color-marron: var(--marron);
-    --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
+    --font-heading: var(--font-display);
+    --font-sans: var(--font-body);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -123,7 +123,7 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Landing: paleta, tipografía provisional y rejilla (apartados 1.0 a 1.2) */
+/* Landing: paleta, tipografía y rejilla (apartados 1.0 a 1.2) */
 :root {
     --lila: #672d4b;
     --verde: #b0b487;
@@ -224,18 +224,11 @@
     mask-repeat: repeat-x, no-repeat, no-repeat;
     }
 
-  /* Panel de respuesta de las dudas: dentado a izquierda y derecha */
-  .panel-dentado {
-    --d: 12px;
-    --paso: 40px;
-    --diente: #0000 var(--d), #000 calc(var(--d) + 0.5px);
-    mask-image:
-      radial-gradient(circle at 0 50%, var(--diente)),
-      radial-gradient(circle at 100% 50%, var(--diente));
-    mask-size: 100% var(--paso);
-    mask-repeat: repeat-y;
-    mask-position: center;
-    mask-composite: intersect;
+  /* Grano de las cards de la sección 1: ruido estático, como papel impreso */
+  .grano {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    opacity: 0.22;
     }
 
   @media (min-width: 1024px) {
@@ -272,9 +265,25 @@
     }
 }
 
-/* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca */
+/* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca.
+   Igual los tickets de las invitaciones y lo que entra en las dudas y el footer */
 @media (prefers-reduced-motion: no-preference) {
-    [data-hero] {
+    [data-hero],
+    [data-invitaciones="ticket"],
+    [data-dudas="titular"],
+    [data-dudas="linea"],
+    [data-dudas="nota"],
+    [data-dudas="boton"],
+    [data-footer="titular"],
+    [data-footer="parejas"],
+    [data-footer="novia"],
+    [data-footer="novio"],
+    [data-footer="tira"],
+    [data-footer="mano"],
+    [data-footer="entrada"],
+    [data-footer="relleno"],
+    [data-footer="suelto"],
+    [data-footer="trayecto"] {
         visibility: hidden;
     }
 }

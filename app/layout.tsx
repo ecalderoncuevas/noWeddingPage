@@ -1,4 +1,4 @@
-import { Caveat, Geist_Mono, Inter } from "next/font/google"
+import { Caveat } from "next/font/google"
 import localFont from "next/font/local"
 
 import "./globals.css"
@@ -14,8 +14,6 @@ export const metadata: Metadata = {
     "Ceremonia, banquete, discursos, tarta y baile. Todo lo divertido de una boda, sin tener que conocer a los novios.",
 }
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
-
 const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" })
 
 const boska = localFont({
@@ -27,11 +25,6 @@ const boska = localFont({
   adjustFontFallback: "Times New Roman",
 })
 
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,7 +34,7 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, caveat.variable, boska.variable)}
+      className={cn("antialiased", caveat.variable, boska.variable)}
     >
       <body>
         <SmoothScroll />

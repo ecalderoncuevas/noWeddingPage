@@ -5,21 +5,32 @@ import "lenis/dist/lenis.css"
 
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap"
 
+let lenis: Lenis | null = null
+
+// Baja hasta un ancla a mano, para quien frena el clic del enlace
+// (el botón de compra, mientras brindan las copas)
+function irA(ancla: string) {
+  if (lenis) lenis.scrollTo(ancla)
+  else document.querySelector(ancla)?.scrollIntoView()
+}
+
 function SmoothScroll() {
   useGSAP(() => {
     const mm = gsap.matchMedia()
 
     mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const lenis = new Lenis({ anchors: true })
-      const raf = (time: number) => lenis.raf(time * 1000)
+      const instancia = new Lenis({ anchors: true })
+      const raf = (time: number) => instancia.raf(time * 1000)
 
-      lenis.on("scroll", ScrollTrigger.update)
+      lenis = instancia
+      instancia.on("scroll", ScrollTrigger.update)
       gsap.ticker.add(raf)
       gsap.ticker.lagSmoothing(0)
 
       return () => {
         gsap.ticker.remove(raf)
-        lenis.destroy()
+        instancia.destroy()
+        lenis = null
       }
     })
   })
@@ -27,4 +38,4 @@ function SmoothScroll() {
   return null
 }
 
-export { SmoothScroll }
+export { irA, SmoothScroll }
