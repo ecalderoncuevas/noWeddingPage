@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useRef } from "react"
 
 import { BotonCompra } from "@/components/boton-compra"
+import { garabatosPlan } from "@/components/garabatos-plan"
 import { evento } from "@/lib/datos-evento"
 import baile from "@/public/plan/baile.png"
 import banquete from "@/public/plan/banquete.png"
@@ -83,21 +84,30 @@ const total = numero(momentos.length - 1)
 const capa = (i: number) =>
   i ? "invisible col-start-1 row-start-1" : "col-start-1 row-start-1"
 
-// Ilustración del momento: sin fondo, sobre el color de la sección
+// Ilustración del momento: sin fondo, sobre el color de la sección, con sus
+// garabatos encima. El SVG se superpone al dibujo y escala con él
 function Ilustracion({
   momento,
+  indice,
   className,
 }: {
   momento: (typeof momentos)[number]
+  indice: number
   className?: string
 }) {
+  const { Detalles } = garabatosPlan[indice]
+
   return (
-    <Image
-      src={momento.imagen}
-      alt={momento.alt}
-      sizes="(min-width: 1024px) 36vw, (min-width: 768px) 45vw, 20rem"
-      className={cn("h-auto w-full", className)}
-    />
+    <div data-plan="detalles" className={cn("relative", className)}>
+      <Image
+        data-plan="dibujo"
+        src={momento.imagen}
+        alt={momento.alt}
+        sizes="(min-width: 1024px) 36vw, (min-width: 768px) 45vw, 20rem"
+        className="h-auto w-full"
+      />
+      <Detalles />
+    </div>
   )
 }
 
@@ -139,6 +149,41 @@ function OrdenDelDia() {
           gsap.set(puntos[0], { scale: 1.6 })
           gsap.set(etiquetas[0], { opacity: 1 })
 
+          // Detalles animados encima de cada ilustración. Solo se anima el
+          // momento activo: al activarse, sus piezas hacen un pop y después
+          // empiezan sus bucles
+          const piezas = q("[data-plan='imagen'] [data-plan='detalles']").map(
+            (raiz, i) => garabatosPlan[i].animar(raiz, false)
+          )
+
+          let actual = -1
+          const activar = (n: number) => {
+            if (n === actual) return
+            actual = n
+            piezas.forEach(({ entrada, bucles }, i) => {
+              if (i === n) return entrada.play()
+              entrada.pause(0)
+              bucles.pause()
+            })
+          }
+          // Los bucles arrancan cuando se ha terminado el pop
+          piezas.forEach(({ entrada, bucles }, i) =>
+            entrada.eventCallback("onComplete", () =>
+              bucles.paused(i !== actual)
+            )
+          )
+          // Fuera de la sección, todo en pausa
+          const parar = () => {
+            actual = -1
+            piezas.forEach(({ entrada, bucles }) => {
+              entrada.pause(0)
+              bucles.pause()
+            })
+          }
+          // El momento activo sale del progreso del scroll
+          const activo = (progreso: number) =>
+            activar(Math.round(progreso * (momentos.length - 1)))
+
           const tl = gsap.timeline({
             defaults: { ease: "power2.inOut", duration: 0.8 },
             scrollTrigger: {
@@ -147,6 +192,11 @@ function OrdenDelDia() {
               scrub: true,
               invalidateOnRefresh: true,
               end: `+=${(momentos.length - 1) * 100}%`,
+              onUpdate: (self) => activo(self.progress),
+              onEnter: (self) => activo(self.progress),
+              onEnterBack: (self) => activo(self.progress),
+              onLeave: parar,
+              onLeaveBack: parar,
             },
           })
 
@@ -220,6 +270,37 @@ function OrdenDelDia() {
             { autoAlpha: 1, y: 0, duration: 0.4 },
             momentos.length - 2 + 0.4
           )
+        }
+      )
+
+      // Móvil: los momentos están apilados, así que cada uno anima sus
+      // detalles cuando entra en pantalla. Con menos piezas (apartado 5 de la
+      // especificación): media caída y sin haces, flash ni vaivén del dibujo
+      mm.add(
+        "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
+        () => {
+          const raices = q("[data-plan='movil'] [data-plan='detalles']")
+          const piezas = raices.map((raiz, i) =>
+            garabatosPlan[i].animar(raiz, true)
+          )
+          piezas.forEach(({ entrada, bucles }) =>
+            entrada.eventCallback("onComplete", () => bucles.play())
+          )
+
+          const observador = new IntersectionObserver(
+            (cambios) =>
+              cambios.forEach((cambio) => {
+                const i = raices.indexOf(cambio.target as HTMLElement)
+                const { entrada, bucles } = piezas[i]
+                if (cambio.isIntersecting) return entrada.play()
+                entrada.pause(0)
+                bucles.pause()
+              }),
+            { threshold: 0.25 }
+          )
+          raices.forEach((raiz) => observador.observe(raiz))
+
+          return () => observador.disconnect()
         }
       )
     },
@@ -310,7 +391,7 @@ function OrdenDelDia() {
                 }}
                 className={capa(i)}
               >
-                <Ilustracion momento={momento} />
+                <Ilustracion momento={momento} indice={i} />
               </div>
             ))}
           </div>
@@ -353,6 +434,7 @@ function OrdenDelDia() {
         {momentos.map((momento, i) => (
           <div
             key={momento.nombre}
+            data-plan="movil"
             style={{ backgroundColor: momento.fondo, color: momento.texto }}
             className="py-16"
           >
@@ -379,7 +461,8 @@ function OrdenDelDia() {
               )}
               <Ilustracion
                 momento={momento}
-                className="col-span-full mx-auto mt-8 max-w-xs"
+                indice={i}
+                className="col-span-full mx-auto mt-8 w-full max-w-xs"
               />
             </div>
           </div>

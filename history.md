@@ -103,6 +103,7 @@ components/
   novios-hero.tsx     Ilustración de los novios del hero
   escenas-concepto.tsx  Las tres escenas animadas de las cards de la sección 1
   garabatos-polaroid.tsx  Los garabatos animados sobre las seis fotos de las polaroids (sección 2)
+  garabatos-plan.tsx  Los garabatos animados sobre las cinco ilustraciones del orden del día (sección 3)
   footer-relleno.tsx  Dibujos de los laterales del footer (tarta, bola, botella, corcho y estrellas)
   star.tsx            Estrella SVG de N puntas
   smooth-scroll.tsx   Lenis sincronizado con ScrollTrigger
@@ -289,10 +290,21 @@ Marca, fecha, hora, lugar, ciudad, plazas y correo están en `lib/datos-evento.t
 - **Imagen.** La que sale se va a la izquierda girando y desvaneciéndose; la que entra llega desde fuera de la pantalla por la derecha (`x: "60vw"`, en unidades de ventana para que ninguna forma asome antes de tiempo, por estrecha que sea).
 - **Ilustraciones.** Cada momento tiene su ilustración (la pareja bajo el arco, la mesa del banquete, el micrófono con el cartel de «no», la tarta y el baile), en `public/plan/`. Se importan de forma estática, así que `next/image` conoce su ancho y alto, y el hueco usa esa proporción: `width: min(100cqw, 100cqh * ancho / alto)`.
 - **Sin fondo y con la paleta de la landing.** Las originales eran dibujos claros sobre un morado oscuro. Un script con el lienzo del navegador las pasó a PNG con transparencia: cada píxel es más transparente cuanto más se parece al fondo, y su color se cambia por el de la paleta según su tipo (claro, verde o rojizo). Sobre lila y marrón el dibujo queda en beige, verde y rosa; sobre verde (Discursos) y beige (Tarta), en lila y marrón, para que se lea. La tarta va en verde, como su hueco anterior. Lo que tocaba el borde de la imagen se desvanece en vez de quedar cortado, y cada una se recortó a su contenido.
+- **Detalles animados encima de cada ilustración** (`components/garabatos-plan.tsx`). La ilustración no se mueve: lo que se anima son las piezas de alrededor. La especificación está en `noWeddingLanding-orden-del-dia-detalles.md`.
+- **Cinco piezas comunes**, sacadas aparte para que los cinco momentos se sientan iguales: **destellos** (estrellas de cuatro puntas que aparecen, brillan y desaparecen, y al volver a salir cambian de sitio dentro de su zona), **caída** (piezas que bajan despacio girando, con vaivén lateral), **subida** (piezas que suben, se mecen y se desvanecen), **interrogantes** (los "?" que flotan) y **onda** (arcos que salen de un punto y se desvanecen). Cada momento solo declara cuáles usa y dónde.
+- **Qué lleva cada momento.** Ceremonia: arroz, destellos y los "?" sobre las cabezas. Banquete: brillos que saltan de copa en copa, vapor que se dibuja sobre dos platos, el «chin-chin» entre dos copas y dos uvas que ruedan. Discursos: notas que salen del micro, ondas de sonido a los dos lados de su cabeza, burbujas dentro de la copa, destellos y las rayitas que agitan el cartel «NO». Tarta: gotas de chocolate que se alargan y caen, el flash de la foto, el "?" sobre la novia que se escapa, destellos y dos corazones. Baile: los reflejos de la bola girando, brillos en la bola, confeti y dos haces de luz que barren.
+- **El SVG lleva el `viewBox` de su ilustración**, así que las coordenadas son las del dibujo y escalan con él. Va dentro del mismo envoltorio que la imagen, de modo que los detalles cruzan la pantalla con ella sin animarlos aparte, y con `overflow: visible` para que destellos y notas puedan salirse un poco del hueco.
+- **El color es el del texto de ese momento**: beige sobre lila y marrón, lila sobre verde y beige. Los detalles de color van en verde y rosa.
+- **Cuándo se mueven.** Cada momento tiene su `entrada` (un pop de sus piezas, `back.out(2)`) y sus `bucles`, en pausa. El momento activo sale del progreso del scroll (`Math.round(progreso * 4)` en el `onUpdate` del `ScrollTrigger`), así que cambia justo a mitad de cada transición en los dos sentidos. Con `onLeave` y `onLeaveBack`, todo en pausa fuera de la sección.
+- **Las burbujas de la copa** van recortadas con un `clipPath` del vaso para que no se salgan, y el vapor de los platos se dibuja con `DrawSVGPlugin` mientras sube.
+- **Dos azares distintos.** El de los bucles es `gsap.utils.random()`, que solo corre en el navegador. El de lo que se dibuja (dónde empiezan el arroz, el confeti y las burbujas, y el tamaño de los brillos) sale de una función fija del índice, la misma `Math.sin()` del borde rasgado de las polaroids: si se usara `random()` en el marcado, el servidor y el navegador pintarían posiciones distintas y React fallaría al hidratar.
+- **El flash de la tarta** no pasa de 0,7 de opacidad y no se repite más de una vez cada 6 s; con movimiento reducido no existe.
+- **Vaivén mínimo de la ilustración** (apartado 4 de la especificación): la mesa del banquete gira ±1,5° en 8 s y los invitados del baile botan 3 px a 120 pulsaciones por minuto. Va en el dibujo, no en el contenedor, que es el que cruza con el scroll.
+- **Móvil.** Aquí sí se animan los detalles, con menos piezas: cae la mitad del arroz y del confeti, y no hay haces, flash, «chin-chin», uvas, ondas ni vaivén del dibujo. Cada momento arranca al entrar en pantalla, con un `IntersectionObserver`, porque los momentos están apilados y no hay `pin`.
 - **Botón de compra.** Solo existe en el último momento: aparece con un fundido junto a la frase de "Baile". El hueco se ajusta al espacio disponible con unidades de contenedor (`cqw` y `cqh`), para no desbordarse en pantallas bajas.
 - **Fondo y texto.** Se anima el `backgroundColor` y el `color` del escenario a la vez. La etiqueta superior tiene su propio color (`acento`): verde sobre los fondos oscuros y marrón sobre los claros.
 - **Progreso.** El relleno crece con `scaleX` desde la izquierda; el punto y el nombre activos cambian de tamaño y opacidad. La rejilla de la barra tiene cuatro tramos iguales y una última columna del ancho de la etiqueta final (`grid-cols-[repeat(4,1fr)_auto]`): la línea y su relleno ocupan los cuatro tramos y acaban en el punto del último momento, cuya etiqueta llega al borde derecho del contenedor. La lista hereda esas columnas con `subgrid`. Cada transición suma al relleno 1 / (momentos − 1).
-- **Móvil y movimiento reducido.** No se fija nada: los momentos se apilan en vertical, cada uno con su color, y no hay barra de progreso.
+- **Móvil y movimiento reducido.** No se fija nada: los momentos se apilan en vertical, cada uno con su color, y no hay barra de progreso. Con movimiento reducido no se crea ninguna timeline, así que los detalles se ven quietos y en su sitio: los destellos visibles, los "?" sin flotar y sin caída, sin subida y sin flash.
 
 ### Sección 4
 
@@ -710,6 +722,11 @@ La excepción son las seis fotos de la sección 2, las únicas fotografías de l
 | Confeti de la foto 6 | Verde, rosa y beige | Lila, verde y rosa | El muro de la masía es claro: el beige no se leería. Es la regla de la propia especificación para las zonas claras |
 | Grano de carrete | PNG de ruido de 200 × 200 en mosaico | La clase `.grano` que ya existe, con el `background-position` animado | El mismo mosaico, sin añadir un archivo |
 | Calidad de las fotos | WebP de calidad 80 | Igual al exportar, pero sin tocar el `quality` de `next/image` | En Next 16 el `qualities` por defecto es `[75]`: un `quality={80}` se serviría a 75 y avisaría en consola |
+| `viewBox` de los detalles | `0 0 600 700` en los cinco | El de cada ilustración (de 690 × 1103 a 960 × 1200) | Así las coordenadas son las del dibujo y se calcan sobre él sin convertir nada. Las medidas del documento se escalaron por el ancho de cada una |
+| Notas de Discursos | Saliendo de la parte de arriba del micro | Por los dos pasillos libres, a los lados | Justo encima del micro está el cartel «NO», que es opaco y casi del mismo tono que el lila del trazo: las notas desaparecían al cruzarlo |
+| Brillos y vapor de Banquete | En beige, como el resto | En verde | Caen sobre la vajilla, que es de color crema: en beige no se veían. La especificación ya admite el verde como color de detalle |
+| Destellos de Ceremonia | Zona al azar | Zona al azar, pero evitando el borde | Pegados al borde se salían del hueco y quedaban sobre el texto |
+| Caída en móvil | La mitad de piezas | Se animan las pares; el resto se queda quieto | Son piezas sueltas, así que basta con no darles bucle: siguen viéndose |
 
 ---
 
@@ -782,3 +799,4 @@ La excepción son las seis fotos de la sección 2, las únicas fotografías de l
 | 14 de octubre de 2026 | Footer rehecho: cartel *save the date* con los novios, hilo elástico con corazón entre dos manos, fotomatón que imprime sus fotos, bucles y profundidad con el ratón |
 | 14 de octubre de 2026 | Revisión de la tipografía: se quitan Inter y Geist Mono del andamiaje y `font-sans` / `font-heading` pasan a Boska; corrección del historial |
 | 15 de octubre de 2026 | Sección 2: las seis polaroids pasan a llevar fotos analógicas de verdad, con garabatos animados encima y los "?" sobre las caras; revelado tipo Polaroid al caer cada foto, grano de carrete y zoom lento en el hover. Se retiran los monigotes de `escenas-polaroid.tsx` |
+| 15 de octubre de 2026 | Sección 3: detalles animados encima de las cinco ilustraciones, con un sistema común de cinco piezas (destellos, caída, subida, interrogantes y onda). Solo se anima el momento activo, que sale del progreso del scroll; en móvil, con menos piezas y al entrar en pantalla |
