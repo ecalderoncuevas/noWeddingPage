@@ -12,8 +12,8 @@
     --color-verde: var(--verde);
     --color-beige: var(--beige);
     --color-marron: var(--marron);
-    --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
+    --font-heading: var(--font-display);
+    --font-sans: var(--font-body);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -123,7 +123,7 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Landing: paleta, tipografía provisional y rejilla (apartados 1.0 a 1.2) */
+/* Landing: paleta, tipografía y rejilla (apartados 1.0 a 1.2) */
 :root {
     --lila: #672d4b;
     --verde: #b0b487;
@@ -266,14 +266,24 @@
 }
 
 /* Lo que anima la timeline de entrada del hero espera oculto hasta que arranca.
-   Igual los tickets de las invitaciones y lo que entra en las dudas */
+   Igual los tickets de las invitaciones y lo que entra en las dudas y el footer */
 @media (prefers-reduced-motion: no-preference) {
     [data-hero],
     [data-invitaciones="ticket"],
     [data-dudas="titular"],
     [data-dudas="linea"],
     [data-dudas="nota"],
-    [data-dudas="boton"] {
+    [data-dudas="boton"],
+    [data-footer="titular"],
+    [data-footer="parejas"],
+    [data-footer="novia"],
+    [data-footer="novio"],
+    [data-footer="tira"],
+    [data-footer="mano"],
+    [data-footer="entrada"],
+    [data-footer="relleno"],
+    [data-footer="suelto"],
+    [data-footer="trayecto"] {
         visibility: hidden;
     }
 }

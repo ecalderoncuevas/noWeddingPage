@@ -4,7 +4,7 @@ Landing para vender invitaciones a una boda enorme en la que nadie se casa. Proy
 
 Este documento recoge qué hay construido, con qué herramientas y por qué se tomó cada decisión. La especificación de diseño completa (textos, medidas y animaciones de cada sección) está en `noWeddingLanding-animaciones.md`; aquí solo se documenta lo ya programado y lo que se aparta de ella.
 
-Última actualización: 13 de octubre de 2026.
+Última actualización: 14 de octubre de 2026.
 
 ## Estado
 
@@ -19,7 +19,7 @@ Este documento recoge qué hay construido, con qué herramientas y por qué se t
 | 5 | Dudas razonables | `#dudas` | `components/sections/Dudas.tsx` | Hecha |
 | 6 | Footer | — | `components/sections/Footer.tsx` | Hecho |
 
-Las siete piezas están maquetadas y animadas. Lo que falta es contenido definitivo (fuente, imágenes y textos) y los extras opcionales; está en el apartado 6.
+Las siete piezas están maquetadas y animadas. Lo que falta es contenido definitivo (imágenes y textos) y los extras opcionales; está en el apartado 6.
 
 ---
 
@@ -41,7 +41,7 @@ Versiones instaladas (`npm ls`) a fecha de la última actualización.
 |---|---|---|
 | next | 16.3.6 | Framework (App Router, Turbopack) |
 | react / react-dom | 19.2.8 | Librería de interfaz |
-| gsap | 3.15.0 | Animaciones; incluye ScrollTrigger, SplitText, Draggable, InertiaPlugin y DrawSVGPlugin |
+| gsap | 3.15.0 | Animaciones; incluye ScrollTrigger, SplitText, Draggable, InertiaPlugin, DrawSVGPlugin y MotionPathPlugin |
 | @gsap/react | 2.1.2 | Hook `useGSAP`, que limpia las animaciones al desmontar |
 | lenis | 1.3.26 | Scroll suave |
 | shadcn | 4.21.0 | Componentes de interfaz (estilo `base-nova`) |
@@ -82,6 +82,7 @@ Versiones instaladas (`npm ls`) a fecha de la última actualización.
 ```
 app/
   layout.tsx          Layout raíz: idioma, metadatos, fuentes y scroll suave
+  fonts/              Boska variable (redonda y cursiva) en woff2
   page.tsx            Solo importa las secciones y las devuelve en orden (<main> y <footer>)
   globals.css         Tema de Tailwind, paleta, tipografía y rejilla
 components/
@@ -100,6 +101,7 @@ components/
   sello-arrastra.tsx  Sello de lacre que hace de cursor en el marquee
   fondo-card.tsx      Fondo de las cards de la sección 1
   escenas-concepto.tsx  Las tres escenas animadas de las cards de la sección 1
+  footer-relleno.tsx  Dibujos de los laterales del footer (tarta, bola, botella, corcho y estrellas)
   star.tsx            Estrella SVG de N puntas
   smooth-scroll.tsx   Lenis sincronizado con ScrollTrigger
   theme-provider.tsx  Tema del andamiaje inicial
@@ -135,6 +137,7 @@ Cada elemento se coloca sobre líneas de columna con las utilidades de Tailwind 
 - **`FondoCard`** (`components/fondo-card.tsx`) — fondo de cada card de la sección 1: número gigante, patrón y grano. Recibe el número; el tono oscuro le llega por la variable `--oscuro` de la card.
 - **`escenas`** (`components/escenas-concepto.tsx`) — las tres escenas de las cards (sobre, regalo y bola). Cada una es un SVG con sus capas marcadas con `data-capa` y una función que devuelve su timeline en pausa. La especificación está en `noWeddingLanding-cards-seccion1.md`.
 - **`Polaroid`** (`components/polaroid.tsx`) — una polaroid de la sección 2: papel, detalles (manchas, arrugas, caligrafía, matasellos, sello de correos, borde rasgado, polaroid de debajo) y sujeción (celo, celo washi, chincheta o esquineros). Recibe el número, el pie de foto y un objeto `diseno` que dice qué lleva. Solo pinta; la mueve la sección. Exporta también las dos sombras (`SOMBRA` y `SOMBRA_HOVER`) para el hover. La especificación está en `noWeddingLanding-polaroids.md`.
+- **Relleno del footer** (`components/footer-relleno.tsx`) — tarta, bola de discoteca, botella, trayecto del corcho, estrellas y anillos. Solo pintan; los anima el footer, que llega a sus piezas por los `data-footer`. Exporta también la función `meridianos()`, que dibuja las facetas de la bola girada un ángulo. La especificación está en `noWeddingLanding-footer-relleno.md`.
 - **`SmoothScroll`** — se monta una vez en el layout. No pinta nada. Exporta `irA(ancla)` para bajar a un ancla a mano; lo usa el botón de compra cuando frena el clic para que brinden las copas.
 
 ### Servidor y cliente
@@ -305,12 +308,56 @@ Rehecha entera: las preguntas son notas de papel sobre un tablero lila. La espec
 
 ### Footer
 
-- **Estructura.** Llamada final con botón, navegación numerada (lista ordenada), cuatro bloques de datos (`<dl>`), nombre gigante y fila legal. Va fuera de `<main>`, en un `<footer>`.
-- **Nombre gigante.** Su tamaño se mide en `cqw` (porcentaje del ancho del contenedor) y no en `vw`, porque el contenedor tiene un máximo de 1368 px: así va de margen a margen a cualquier ancho. El valor (15cqw en una línea, 29cqw en dos) se sacó midiendo el texto en el navegador con Georgia.
-- **Dos líneas en móvil.** Cada mitad del nombre es `block` por debajo de 768 px e `inline` por encima.
-- **Revelado de las letras.** `SplitText` por líneas y caracteres, con máscara por líneas; `gsap.from` con `yPercent: 100` y `stagger: 0.03`, lanzado por `ScrollTrigger` sin `scrub`. La máscara es por líneas y no por caracteres para no recortar los lados de las letras en cursiva.
-- **`autoSplit`.** Como el nombre pasa de una línea a dos según el ancho, `SplitText` se crea con `autoSplit: true` y la animación se devuelve desde `onSplit`: si cambian las líneas, rehace el corte y la animación.
+Rehecho entero: un cartel tipo *save the date* dibujado a línea, con los novios jugando con las letras, un hilo con corazón entre dos manos y una tira de fotomatón. La especificación está en `noWeddingLanding-footer.md`.
+
+- **Estructura.** Fondo marrón con grano; cartel "NADIE / se / CASA!" con los novios, "? & ?" y la rúbrica; tira de fotomatón; zona del hilo con las dos manos; botón de compra con decoración; datos (correo, navegación con fecha y lugar) y fila legal. Va fuera de `<main>`, en un `<footer>`.
+- **Tamaño.** Desde 768 px todo el footer de arriba (cartel, fotomatón, manos, hilo y márgenes) se mide con una sola variable, `--f: min(12.5vw, 19svh)`: depende también del alto de la pantalla, para que el botón de compra se vea al llegar al footer en cualquier portátil (comprobado a 1024 × 768, 1366 × 768, 1440 × 900 y 1920 × 1080).
+- **Cartel.** Texto real en HTML, de tamaño `--f` (22vw en móvil). Los novios, "? & ?" y la rúbrica son hermanos del texto, no hijos: `SplitText` mete cada línea en una máscara y los habría recortado. Se colocan en `em` desde la variable `--tope`, que es la altura del borde superior de la N dentro de la caja (0,035em con `leading-[0.8]`, medida en el navegador con Boska). Así siguen pegados a la N y a la E a cualquier tamaño de letra. La novia va al 85 % del dibujo, sentada con el vestido sobre el borde de la N; su trazo se compensa para que no quede más fino que el del novio.
+- **Dibujos.** Novia, novio, manos, hilo, corazón y rúbrica son SVG dibujados a mano en el propio componente, calcados del PNG del diseño: una unidad de sus `viewBox` es un píxel del diseño a 2000 px. Relleno marrón para tapar lo de detrás y trazo beige de 4,2 con puntas redondas.
+- **Hilo en píxeles reales.** El SVG del hilo tiene como `viewBox` el tamaño de su zona y se mide con un `ResizeObserver`. Las manos son SVG propios pegados a los bordes (la derecha en espejo) y de su caja sale dónde sujeta el meñique. Cada mitad del hilo es una Bézier de la mano a la punta del corazón: sale de la mano hacia abajo y llega plana al corazón. El corazón es un grupo que se traslada a esa punta con `transform`. En móvil el hilo cuelga como mucho el 20 % de su tramo, para no ocupar tanto alto.
+- **Fotomatón.** Desde 768 px va a la izquierda en vertical, girado 4°; en móvil pasa debajo del cartel, con las cuatro fotos en fila. Sus medidas van en `cqw`. El `@container` va en el envoltorio y no en la propia tira: el relleno de un contenedor en `cqw` se mide con el contenedor de fuera.
+- **Entrada.** Una sola timeline (`ScrollTrigger` con `start: "top 70%"` y `once: true`), con el segundo exacto de cada paso:
+
+| Segundo | Qué pasa |
+|---|---|
+| 0,0 | Las dos mitades del hilo se dibujan desde las manos (`drawSVG`, 1 s) |
+| 0,2 | Aparecen las manos |
+| 0,3 | Las letras suben una a una (`SplitText` por líneas y caracteres, máscara por líneas, `stagger: 0.03`) |
+| 0,6 | Baja la tira del fotomatón (`y: -80`) |
+| 0,8 | Se dibuja la rúbrica de "se" |
+| 0,9 | Se dibuja el corazón y cada foto pasa de blanco a su color, una tras otra (`stagger: 0.2`): se "imprime" |
+| 1,0 | La novia salta sobre la N (`y: -30`, `scale: 0.8`, `back.out(2)`) y aparece "? & ?" |
+| 1,1 | El novio llega balanceándose (`rotation: 25 → 0` desde sus manos, `elastic.out(1, 0.4)`, 1,4 s) |
+| 1,2 | El corazón late una vez |
+| 1,6 | Suben el botón, los datos y la fila legal |
+
+- **Detalles de la entrada.** La opacidad del novio va en un tween aparte: con el rebote elástico parpadearía. Al terminar de dibujarse el hilo se le quitan los restos de `drawSVG`, porque el hilo elástico cambia su largo.
+- **Bucles.** Empiezan al terminar la entrada y se pausan con el footer fuera de pantalla (`onToggle`). El novio hace de péndulo (-4° a 4°, 2,4 s por lado), y arranca en su punto medio con `seek()` para no dar un salto. El corazón late dos veces seguidas cada 2,4 s. La novia brinda: el brazo y la copa giran desde el hombro (`svgOrigin`) y las chispas se apagan y vuelven a saltar; la espera entre brindis se sortea en cada vuelta (`onRepeat`) entre 3,5 y 5 s.
+- **Hilo elástico.** Solo con ratón, desde 768 px y con la entrada terminada. Si el cursor está a menos de 160 px del hilo, el anclaje se desplaza hacia él (como mucho 120 px en horizontal y 60 en vertical) y el corazón gira un poco. Se anima un objeto proxy con dos parejas de `quickTo`: una sigue al cursor (`power3.out`, 0,5 s) y otra lo devuelve a su sitio con rebote (`elastic.out(1, 0.35)`, 1,2 s). Al cambiar de una a otra se pausa la que no toca. El `d` del hilo solo se recalcula en su `onUpdate`.
+- **Profundidad.** Cartel, fotomatón y novios se alejan del cursor unos píxeles con `quickTo` (0,8 s). Los novios van dentro del cartel y suman los 6 px de él a sus 10: 16 en total. El hilo y las manos no se mueven.
+- **Capas.** La profundidad mueve el envoltorio (`data-profundidad`) y la entrada y los bucles, el dibujo de dentro, así que no se pisan.
+- **Movimiento reducido.** Todo aparece con un fundido, con el hilo ya dibujado; sin bucles ni interacciones.
 - **Subrayado de los enlaces.** Solo CSS: un pseudoelemento `::after` que crece con `scale-x` de 0 a 1 desde la izquierda, al pasar el ratón y al recibir el foco.
+
+#### Relleno de los laterales
+
+Con Boska el cartel queda más estrecho de lo previsto y los lados del footer se veían vacíos. Se añaden una tarta, una bola de discoteca, una botella de champán cuyo corcho vuela hasta la copa de la novia, siete estrellas y dos parejas de anillos. La especificación está en `noWeddingLanding-footer-relleno.md`.
+
+- **Posición.** Cada dibujo se coloca con `left` en porcentaje del ancho y `top` y ancho en múltiplos de `--f`, así escalan con el cartel. Las medidas se sacaron del boceto, donde el cartel medía 182 px: una distancia del boceto en `f` es esa distancia / 182.
+- **Solo desde 768 px.** En móvil se ocultan todos: el cartel ocupa el ancho.
+- **Bola de discoteca.** Las facetas verticales son medias elipses de polo a polo, cuya anchura depende de su ángulo (`r · sen θ`). Para que gire, un objeto proxy suma el mismo ángulo a todas, de 0 a 30° (la separación entre dos) en bucle, y en su `onUpdate` se recalcula el `d` de cada una. Al llegar a 30° el dibujo es igual que a 0°, así que el bucle no se nota. El cordel sube más allá del techo del footer, que lo recorta, y la bola se balancea desde ese punto del techo (`svgOrigin`).
+- **Trayecto del corcho.** Va en un SVG del tamaño del footer, en píxeles reales, igual que el hilo. La boca de la botella y la copa de la novia se miden con `getBoundingClientRect()` en cada cambio de tamaño, de modo que el corcho termina en la copa a cualquier ancho (comprobado a 1024, 1366, 1919 y 2560 px). La copa se mide en la capa de profundidad de la novia y no en su dibujo, porque la entrada escala y desplaza el dibujo.
+- **Línea de puntos.** Igual que en la sección 2: una máscara con el trazo continuo, que es lo que dibuja `DrawSVGPlugin`, descubre los puntos.
+- **Vuelo.** `MotionPathPlugin` lleva el corcho por la misma curva (`align` al trazado), con la misma duración y curva de velocidad que el dibujo de la máscara, así la estela sigue al corcho. Mientras vuela no lo recoloca el `ResizeObserver`.
+- **Primer brindis.** El brindis de la novia es una función que devuelve su timeline: la entrada añade uno a los 2 s, cuando llega el corcho, y el bucle repite otro.
+- **Novios de la tarta.** El segundo va 0,9 s por detrás del primero, un cuarto de su vaivén, y espera ya inclinado a -6° para no dar un salto al empezar.
+- **Profundidad.** Tarta, bola, botella y trayecto, 12 px; estrellas y anillos, 20 px.
+
+| Segundo | Qué pasa |
+|---|---|
+| 1,0 | Aparecen la botella, la tarta, la bola, las estrellas y los anillos (`y: 20`, `back.out(1.6)`, `stagger: 0.1`) |
+| 1,3 | El corcho sale de la botella girando hasta la copa (0,7 s) y su estela de puntos se dibuja a la vez; las gotas saltan y se desvanecen |
+| 2,0 | La novia brinda |
 
 ### Conceptos de código nuevos en las secciones 2 y 3
 
@@ -492,9 +539,18 @@ Tailwind 4 escribe `rotate-[1.2deg]`, `scale-x-0` o `-translate-x-1/2` en las pr
 
 ```ts
 const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" })
+
+const boska = localFont({
+  src: [
+    { path: "./fonts/Boska-Variable.woff2", weight: "200 900", style: "normal" },
+    { path: "./fonts/Boska-VariableItalic.woff2", weight: "200 900", style: "italic" },
+  ],
+  variable: "--font-boska",
+  adjustFontFallback: "Times New Roman",
+})
 ```
 
-Next descarga la fuente al compilar y la sirve desde el propio sitio; el navegador no llama a Google. `variable` la expone como variable CSS, que `globals.css` recoge en `--font-manuscrita`.
+Caveat viene de Google Fonts: Next la descarga al compilar y la sirve desde el propio sitio, así que el navegador no llama a Google. Boska es un archivo local (`app/fonts/`) con `next/font/local`; al ser variable, un solo archivo cubre todos los pesos de 200 a 900. `adjustFontFallback` ajusta las métricas de la fuente de reserva para que el texto no salte al terminar de cargar Boska. `variable` expone cada fuente como variable CSS, que `globals.css` recoge en `--font-display`, `--font-body` y `--font-manuscrita`.
 
 ### Comprobaciones
 
@@ -525,13 +581,13 @@ Reglas de contraste:
 
 ### Tipografía
 
-| Variable | Valor provisional | Valor final | Uso |
-|---|---|---|---|
-| `--font-display` | Georgia, Times New Roman, serif | Boska | Titulares |
-| `--font-body` | system-ui, sans-serif | Por decidir | Resto de textos |
-| `--font-manuscrita` | Caveat (Google Fonts, vía `next/font`) | Caveat | Pies de foto de las polaroids |
+| Variable | Fuente | Uso |
+|---|---|---|
+| `--font-display` | Boska (local, vía `next/font/local`) | Titulares |
+| `--font-body` | Boska | Resto de textos |
+| `--font-manuscrita` | Caveat (Google Fonts, vía `next/font`) | Pies de foto y caligrafía de las polaroids; etiqueta vertical de las dudas |
 
-Todos los componentes usan las clases `font-display` y `font-body`, nunca una familia escrita a mano: cuando llegue Boska se cambia en un solo sitio (`app/globals.css`).
+Georgia queda solo como fuente de reserva mientras carga Boska. Todos los componentes usan las clases `font-display`, `font-body` y `font-manuscrita`, nunca una familia escrita a mano, así que la fuente se cambia en un solo sitio (`app/globals.css`). Las utilidades de shadcn `font-sans` y `font-heading` también apuntan a Boska, de modo que ningún componente puede caer en otra fuente.
 
 Recursos que se repiten:
 
@@ -592,8 +648,18 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Timeline de cada nota | Creada una sola vez | Creada al abrir y destruida al cerrar | La respuesta oculta no se puede medir ni partir en líneas; así además se adapta si cambia el ancho |
 | Etiqueta vertical en móvil y tablet | Se oculta o pasa a horizontal | Se oculta por debajo de 1024 px | — |
 | Botón "¿Otra duda? Escríbenos" | Sin destino definido | Enlace `mailto:` al correo pendiente | Hay que sustituir `CORREO` en `Dudas.tsx` cuando llegue |
-| Tamaño del nombre gigante del footer | `font-size` en `vw` (unos 15.7vw) | En `cqw` (15cqw) | El contenedor tiene ancho máximo; en `vw` se saldría en pantallas grandes |
-| Marca en el hero y el footer | "[Tu marca]" | "Logo" | Decisión del autor |
+| Dibujos del footer | SVG `footer-v2-boceto-marron.svg` exportado de Figma | Dibujados a mano en `Footer.tsx`, calcados del PNG | No se recibió el SVG; se sustituyen manteniendo los nombres de capa en `data-capa` |
+| Posición de los novios del footer | Coordenadas del diseño | Recolocados sobre las letras de Boska | Con Boska, "NADIE" es más estrecho que en el diseño (2,6em frente a 3,2em) a la misma altura de mayúscula |
+| Rúbrica de "se" | Sin animación | Se dibuja con `DrawSVG` en la entrada | Si estuviera desde el principio, se vería sola mientras suben las letras |
+| Profundidad de los novios | 16 px | 10 px dentro del cartel, que suma 6 | Van dentro del cartel para seguir pegados a las letras; el total es el mismo |
+| Tamaño del footer | Cartel de unos 290 px a 1920 y novia a tamaño completo | Cartel con `min(12.5vw, 19svh)` y novia al 85 %, más abajo | Petición del autor: que el botón de compra se vea al llegar al footer |
+| Dibujos del relleno del footer | SVG `footer-relleno-capas.svg` | Dibujados a mano en `footer-relleno.tsx`, calcados del boceto | No se recibió el SVG |
+| Giro de la bola | Grupo de facetas desplazado con `x` dentro de un `clipPath` | Facetas recalculadas como elipses según el ángulo de giro | Una rejilla que se desplaza parece plana; así la bola parece una esfera |
+| Estrellas del footer | 7 sueltas | 7 sueltas más los 5 destellos de la bola | Es lo que muestra el boceto |
+| Relleno en móvil | Tarta pequeña junto al cartel, o se oculta | Se oculta todo el relleno | En móvil el cartel ocupa el ancho |
+| Datos del footer | Desde el borde de la pantalla (100 px a 1920) | Dentro del contenedor de 1368 px | Regla de la rejilla del profesor; solo el hilo, las manos y el fotomatón llegan a los bordes |
+| Textos de la navegación y la fila legal | Letra de palo | Boska | Toda la landing va en Boska |
+| Marca en el hero | "[Tu marca]" | "Logo" | Decisión del autor; el footer nuevo usa "[Tu marca]", como su especificación |
 | Fotos de las polaroids | Hueco en blanco | Hueco de color liso (lila o marrón, en dos tonos) | Es lo que fija la especificación de las polaroids mientras no hay ilustraciones |
 | Animación de las polaroids | Caen una a una sobre la mesa, que se ve entera | Ventana fija con una cámara que recorre la mesa de foto en foto | Decisión del autor: se copia el componente Polaroid Scroll de Framer, con un scroll más largo y suave |
 | Hover de las polaroids | La foto se endereza, crece y gana sombra | Solo crece y gana sombra | Ahora la endereza la cámara al enfocarla |
@@ -609,7 +675,6 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 
 | Qué | Dónde afecta | Mientras tanto |
 |---|---|---|
-| Tipografía Boska | Todos los titulares | Georgia a través de `--font-display` |
 | Ilustración de los novios | Hero | Hueco en blanco |
 | Ilustraciones definitivas de las tres cards | Sección 1 | Dibujos propios ya animados |
 | Seis fotos o dibujos | Sección 2 | Hueco de color |
@@ -617,23 +682,20 @@ Todavía no hay ilustraciones ni fotos. Cada una tiene su hueco con el tamaño d
 | Respuestas de las dudas | Sección 5 | Lorem ipsum (salvo la primera) |
 | Correo de contacto | Sección 5 | El botón enlaza a `mailto:[tu correo]` (constante `CORREO`) |
 | Año de la primera polaroid | Sección 2 | La primera polaroid va sin año |
-| Marca, fecha, lugar, hora, ciudad y número de plazas | Hero, sección 4 y footer | "Logo" y los textos entre corchetes |
-| Enlaces de Instagram y TikTok | Footer | Texto sin enlace |
+| Marca, fecha, lugar, hora, ciudad, correo y número de plazas | Hero, sección 4 y footer | "Logo", "[Tu marca]" y los textos entre corchetes |
+| Fotos del fotomatón | Footer | Hueco de color con el cartel escrito |
 | Columnas y canal que fija el profesor | Toda la página | 12 columnas y 24 px de canal |
-
-Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de los titulares gigantes.
 
 ### Por hacer o comprobar
 
 - Probar a mano el arrastre del marquee y el de las polaroids con el ratón.
 - A 1920 × 1080 el hueco de los novios apenas se monta sobre el titular; a 1440 × 900 sí lo hace como en Figma.
-- El tamaño del nombre gigante del footer (15cqw y 29cqw) está ajustado a Georgia: hay que volver a medirlo con Boska.
-- Comprobar a mano el subrayado de los enlaces del footer al pasar el ratón.
-- Los anchos de los dígitos de la hora se miden al cargar; al pasar a Boska habrá que medirlos cuando la fuente esté cargada (`document.fonts.ready`).
-- Georgia dibuja los números con cifras de estilo antiguo (suben y bajan de la línea); se corregirá solo al pasar a Boska.
+- Probar a mano el hilo elástico y la profundidad del footer con el ratón (comprobados solo con un ratón simulado).
+- Comprobar con el ratón que el ramo del botón del footer no choca con el corazón; si choca, reducirlo a escala 0,75.
+- Los anchos de los dígitos de la hora se miden al cargar; si Boska aún no ha llegado se miden con la de reserva. Habría que medirlos con `document.fonts.ready`.
 - Los botones "Quiero esta invitación" enlazan a `#invitaciones` (la propia sección): no hay pasarela de compra.
 - Precios y nombres de los tickets son provisionales.
-- Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1, parallax de las polaroids en la sección 2 separación del ticket por la línea de corte en la sección 4 y footer que aparece desde debajo.
+- Extras opcionales sin hacer: confeti en el hero, encogido de la card tapada en la sección 1, parallax de las polaroids en la sección 2, separación del ticket por la línea de corte en la sección 4 y lo descartado en el footer (pataleo del novio, flash periódico del fotomatón, corazones que suben...).
 
 ---
 
@@ -666,3 +728,6 @@ Al sustituir la fuente provisional por Boska habrá que reajustar el tamaño de 
 | 13 de octubre de 2026 | Sección 4: la cabecera se enciende palabra a palabra |
 | 13 de octubre de 2026 | Sección 4: nueva entrada de los tickets (lados, líneas, sello y precios que cuentan) y brillo en Familia |
 | 13 de octubre de 2026 | Sección 5 rehecha: notas de papel que se abren con clip, entrada en zigzag y botón de contacto |
+| 14 de octubre de 2026 | Footer: relleno de los laterales con tarta, bola de discoteca que gira, botella cuyo corcho vuela hasta la copa de la novia, estrellas y anillos |
+| 14 de octubre de 2026 | Footer rehecho: cartel *save the date* con los novios, hilo elástico con corazón entre dos manos, fotomatón que imprime sus fotos, bucles y profundidad con el ratón |
+| 14 de octubre de 2026 | Revisión de la tipografía: se quitan Inter y Geist Mono del andamiaje y `font-sans` / `font-heading` pasan a Boska; corrección del historial |
