@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useRef } from "react"
 
 import {
@@ -8,7 +9,7 @@ import {
   SOMBRA,
   SOMBRA_HOVER,
 } from "@/components/polaroid"
-import { escenasPolaroid } from "@/components/escenas-polaroid"
+import { garabatosPolaroid } from "@/components/garabatos-polaroid"
 import { Draggable, gsap, SplitText, useGSAP } from "@/lib/gsap"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +18,8 @@ import { cn } from "@/lib/utils"
 // para que no parezcan seis copias
 const polaroids: {
   pie: string
+  src: string
+  alt: string
   giro: number
   x: number
   y: number
@@ -24,6 +27,8 @@ const polaroids: {
 }[] = [
   {
     pie: "Cómo se conocieron",
+    src: "/polaroids/polaroid-01-conocieron.webp",
+    alt: "Los novios, de espaldas, bajo un paraguas verde en una calle mojada",
     giro: -6,
     x: 0,
     y: 4.17,
@@ -38,6 +43,8 @@ const polaroids: {
   },
   {
     pie: "La primera cita",
+    src: "/polaroids/polaroid-02-cita.webp",
+    alt: "Los novios, de espaldas, en las butacas de un cine antiguo con palomitas",
     giro: 5,
     x: 33.91,
     y: 16.67,
@@ -54,6 +61,8 @@ const polaroids: {
   },
   {
     pie: "Empezaron a salir",
+    src: "/polaroids/polaroid-03-salir.webp",
+    alt: "Los novios paseando de noche cogidos de la mano",
     giro: -3,
     x: 76.33,
     y: 2.78,
@@ -70,6 +79,8 @@ const polaroids: {
   },
   {
     pie: "El primer perro",
+    src: "/polaroids/polaroid-04-perro.webp",
+    alt: "Un perro pequeño con correa verde entre las piernas de los novios",
     giro: 4,
     x: 76.33,
     y: 52.78,
@@ -84,6 +95,8 @@ const polaroids: {
   },
   {
     pie: "La pedida",
+    src: "/polaroids/polaroid-05-pedida.webp",
+    alt: "Él, de rodillas, le ofrece un anillo; ella se tapa la cara de la sorpresa",
     giro: -5,
     x: 33.91,
     y: 65.28,
@@ -102,6 +115,8 @@ const polaroids: {
   },
   {
     pie: "La «boda»",
+    src: "/polaroids/polaroid-06-boda.webp",
+    alt: "Los novios, de espaldas, bajo un arco de flores en el patio de una masía",
     giro: 6,
     x: 0,
     y: 51.39,
@@ -202,21 +217,33 @@ function Novios() {
           const mascaras = q("[data-novios='tramo']")
           const mesa = q("[data-novios='mesa']")[0]
 
-          // Escenas de las fotos: cada una con su timeline en pausa. Solo se
-          // mueve si su polaroid ya ha caído y está en pantalla. La pantalla
-          // se vigila con un IntersectionObserver y no con ScrollTrigger,
-          // porque las fotos se arrastran y cambian de sitio
-          const escenas = q("[data-polaroid='foto']").map((foto, i) =>
-            escenasPolaroid[i].animar(foto)
+          // Cada foto tiene dos timelines: la entrada (el revelado y el
+          // dibujo de los garabatos, una sola vez) y sus dos bucles, en
+          // pausa. Los bucles solo corren si la polaroid ya ha caído, está en
+          // pantalla y la foto ha terminado de revelarse. La pantalla se
+          // vigila con un IntersectionObserver y no con ScrollTrigger, porque
+          // las fotos se arrastran y cambian de sitio
+          const piezas = q("[data-polaroid='foto']").map((foto, i) =>
+            garabatosPolaroid[i].animar(foto)
           )
-          const caida = escenas.map(() => false)
-          const vista = escenas.map(() => false)
+          const caida = piezas.map(() => false)
+          const vista = piezas.map(() => false)
           const animar = (i: number) =>
-            escenas[i].paused(!(caida[i] && vista[i]))
+            piezas[i].bucles.paused(
+              !(caida[i] && vista[i] && piezas[i].entrada.progress() === 1)
+            )
           const caer = (i: number, encima: boolean) => {
             caida[i] = encima
+            // Al volver atrás la foto se queda otra vez sin revelar, para que
+            // la entrada se repita al bajar de nuevo
+            if (encima) piezas[i].entrada.play()
+            else piezas[i].entrada.pause(0)
             animar(i)
           }
+          // Los bucles arrancan al terminar el revelado
+          piezas.forEach(({ entrada }, i) =>
+            entrada.eventCallback("onComplete", () => animar(i))
+          )
           const observador = new IntersectionObserver(
             (cambios) =>
               cambios.forEach((cambio) => {
@@ -415,17 +442,25 @@ function Novios() {
             })
 
             const sombra = marco.querySelector("[data-polaroid='sombra']")
+            const imagen = marco.querySelector("[data-foto='img']")
 
-            // Al pasar el ratón, la escena se acelera
+            // Al pasar el ratón, la foto se acerca despacio dentro del marco
+            // (el hueco tiene overflow: hidden) y los garabatos van más rápido
             const entrar = () => {
               gsap.to(marco, { scale: 1.05, duration: 0.3 })
               gsap.to(sombra, { boxShadow: SOMBRA_HOVER, duration: 0.3 })
-              gsap.to(escenas[i], { timeScale: 1.6, duration: 0.3 })
+              gsap.to(imagen, {
+                scale: 1.06,
+                duration: 1.2,
+                ease: "power2.out",
+              })
+              gsap.to(piezas[i].bucles, { timeScale: 1.8, duration: 0.3 })
             }
             const salir = () => {
               gsap.to(marco, { scale: 1, duration: 0.3 })
               gsap.to(sombra, { boxShadow: SOMBRA, duration: 0.3 })
-              gsap.to(escenas[i], { timeScale: 1, duration: 0.3 })
+              gsap.to(imagen, { scale: 1, duration: 1.2, ease: "power2.out" })
+              gsap.to(piezas[i].bucles, { timeScale: 1, duration: 0.3 })
             }
 
             marco.addEventListener("mouseenter", entrar)
@@ -524,7 +559,7 @@ function Novios() {
             />
 
             {polaroids.map((polaroid, i) => {
-              const { Escena } = escenasPolaroid[i]
+              const { Garabatos } = garabatosPolaroid[i]
               return (
                 <div key={polaroid.pie} className="contents">
                   <figure
@@ -546,7 +581,29 @@ function Novios() {
                       pie={polaroid.pie}
                       diseno={polaroid.diseno}
                     >
-                      <Escena />
+                      {/* De abajo arriba: la foto, el grano de carrete, la
+                          capa de revelado y los garabatos */}
+                      <Image
+                        data-foto="img"
+                        src={polaroid.src}
+                        alt={polaroid.alt}
+                        width={800}
+                        height={800}
+                        sizes="300px"
+                        className="size-full object-cover"
+                      />
+                      <div
+                        aria-hidden
+                        className="grano grano-carrete pointer-events-none absolute inset-0 opacity-[0.14]"
+                      />
+                      {/* Empieza visible y la entrada la desvanece. Sin
+                          animaciones la foto se ve ya revelada */}
+                      <div
+                        data-foto="revelado"
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 bg-[#E9E2CF] opacity-0 motion-safe:opacity-100"
+                      />
+                      <Garabatos />
                     </Polaroid>
                   </figure>
                   {anos[i] && (

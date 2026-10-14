@@ -4,7 +4,7 @@ Landing para vender invitaciones a una boda enorme en la que nadie se casa. Proy
 
 Este documento recoge qué hay construido, con qué herramientas y por qué se tomó cada decisión. La especificación de diseño completa (textos, medidas y animaciones de cada sección) está en `noWeddingLanding-animaciones.md`; aquí solo se documenta lo ya programado y lo que se aparta de ella.
 
-Última actualización: 14 de octubre de 2026.
+Última actualización: 15 de octubre de 2026.
 
 ## Estado
 
@@ -102,13 +102,15 @@ components/
   fondo-card.tsx      Fondo de las cards de la sección 1
   novios-hero.tsx     Ilustración de los novios del hero
   escenas-concepto.tsx  Las tres escenas animadas de las cards de la sección 1
-  escenas-polaroid.tsx  Las seis escenas animadas de las fotos de las polaroids (sección 2)
+  garabatos-polaroid.tsx  Los garabatos animados sobre las seis fotos de las polaroids (sección 2)
   footer-relleno.tsx  Dibujos de los laterales del footer (tarta, bola, botella, corcho y estrellas)
   star.tsx            Estrella SVG de N puntas
   smooth-scroll.tsx   Lenis sincronizado con ScrollTrigger
   theme-provider.tsx  Tema del andamiaje inicial
 public/
   plan/               Ilustraciones de los cinco momentos de la sección 3, sin fondo
+  polaroids/          Las seis fotos de la sección 2, en WebP de 800 × 800
+  images/             Los PNG de 1024 × 1024 de los que salen las fotos de polaroids/
 lib/
   datos-evento.ts     Marca, fecha, hora, lugar, ciudad, plazas y correo del evento
   gsap.ts             Registro único de los plugins de GSAP
@@ -141,7 +143,7 @@ Cada elemento se coloca sobre líneas de columna con las utilidades de Tailwind 
 - **`SelloArrastra`** (`components/sello-arrastra.tsx`) — sello de lacre que hace de cursor sobre el marquee: cera, brillo, disco, aro, flor y texto circular. Solo pinta; lo anima la sección 1, que llega a sus piezas por los `data-sello` (`cera` y `texto`). La especificación está en `noWeddingLanding-sello-arrastra.md`.
 - **`FondoCard`** (`components/fondo-card.tsx`) — fondo de cada card de la sección 1: número gigante, patrón y grano. Recibe el número; el tono oscuro le llega por la variable `--oscuro` de la card.
 - **`escenas`** (`components/escenas-concepto.tsx`) — las tres escenas de las cards (sobre, regalo y bola). Cada una es un SVG con sus capas marcadas con `data-capa` y una función que devuelve su timeline en pausa. La especificación está en `noWeddingLanding-cards-seccion1.md`.
-- **`escenasPolaroid`** (`components/escenas-polaroid.tsx`) — las seis escenas de las fotos de las polaroids. Cada una es un SVG de 300 × 300 con sus capas marcadas con `data-capa` y una función que devuelve su timeline en pausa. La especificación está en `noWeddingLanding-polaroids-escenas.md`.
+- **`garabatosPolaroid`** (`components/garabatos-polaroid.tsx`) — los garabatos que van encima de las seis fotos de las polaroids. Cada uno es un SVG de 300 × 300 con sus capas marcadas con `data-capa` y una función que devuelve sus dos timelines: `entrada` (el revelado de la foto y el dibujo de los garabatos, una vez) y `bucles` (los dos bucles de esa foto, en pausa). La especificación está en `noWeddingLanding-polaroids-fotos.md`, que sustituye a la de los monigotes.
 - **`Polaroid`** (`components/polaroid.tsx`) — una polaroid de la sección 2: papel, detalles (manchas, arrugas, caligrafía, matasellos, sello de correos, borde rasgado, polaroid de debajo) y sujeción (celo, celo washi, chincheta o esquineros). Recibe el número, el pie de foto y un objeto `diseno` que dice qué lleva. Solo pinta; la mueve la sección. Exporta también las dos sombras (`SOMBRA` y `SOMBRA_HOVER`) para el hover. La especificación está en `noWeddingLanding-polaroids.md`.
 - **Relleno del footer** (`components/footer-relleno.tsx`) — tarta, bola de discoteca, botella, trayecto del corcho, estrellas y anillos. Solo pintan; los anima el footer, que llega a sus piezas por los `data-footer`. Exporta también la función `meridianos()`, que dibuja las facetas de la bola girada un ángulo. La especificación está en `noWeddingLanding-footer-relleno.md`.
 - **`SmoothScroll`** — se monta una vez en el layout. No pinta nada. Exporta `irA(ancla)` para bajar a un ancla a mano; lo usa el botón de compra cuando frena el clic para que brinden las copas.
@@ -261,14 +263,18 @@ Marca, fecha, hora, lugar, ciudad, plazas y correo están en `lib/datos-evento.t
 - **Dos capas por polaroid.** La exterior (`<figure>`) la mueve el scroll; la interior (la pieza que pinta `Polaroid`, con su sujeción y la polaroid de debajo) es el `Draggable` y recibe el hover. Si los dos animaran el mismo elemento se pisarían, porque ambos escriben en `transform`.
 - **Arrastre y hover.** Solo a partir de 768 px. Al pulsar una foto sube por encima de las demás; al pasar el ratón crece un 5 % y gana sombra. Cada foto puede alejarse de su sitio un tercio del ancho de la mesa: el límite es un objeto (`minX`, `maxX`...) y no un elemento, porque `Draggable` mete dentro del elemento límite todo lo que crea, y habría traído a la ventana las fotos que están fuera de pantalla.
 - **Botón "Recolocar".** Fijo abajo en el centro de la ventana. Está oculto y asoma (`autoAlpha` e `y`) en el primer `onDragStart`. Al pulsarlo corta la inercia que quede (`killTweensOf`), devuelve todos los marcos a `x: 0, y: 0` con un pequeño `stagger`, restablece los `z-index` y se vuelve a ocultar. Con `visibility: hidden` tampoco se llega a él con el tabulador. Usa el lenguaje del botón de compra (esquinas de 4 px, línea discontinua interior, mayúsculas espaciadas) en pequeño y con el fondo beige al 80 %.
-- **Escenas de las fotos.** Cada foto es una escena dibujada a línea con los novios en monigote (cabeza con "?", pajarita verde él, moño ella), copiada del SVG `polaroids-escenas.svg`: la lluvia bajo el paraguas, el cine, el paseo de noche, el perro, la pedida con fuegos artificiales y la «boda» bajo el arco. `Polaroid` las recibe como `children` y las recorta con `overflow: hidden`, también al arrastrar. Las figuras no se mueven; se anima el fondo.
-- **Animaciones de cada escena.** Lluvia en mosaico sin cortes y ondas en el charco; parpadeo del proyector (con `repeatRefresh`, cada vuelta distinta), brillo de la pantalla y palomitas que saltan; estrellas que titilan, farola que late y luna que flota; cola del perro, corazones que suben y pelota que bota y se aplasta; fuegos artificiales dibujados con `drawSVG` y destello del anillo; confeti que cae girando y flores del arco que se mecen.
-- **Lluvia sin cortes.** El grupo de gotas se repite como un mosaico: 300 px a la derecha y, en la fila de arriba, 128 px más a la derecha (la inclinación de las gotas). Todo baja un tramo (`x: "-=128"`, `y: "+=300"`) en bucle; al repetirse, cada copia ocupa el sitio de otra. Con solo la copia de arriba que proponía la especificación quedaban huecos en las esquinas a mitad del tramo, así que son cuatro copias.
-- **Confeti a media caída.** Cada trozo empieza en un punto distinto de su caída: se coloca en la timeline de la escena entre los segundos 0 y 5, y la timeline arranca adelantada a los 5 (`seek`). Cada trozo va en su grupo, para que su giro dibujado y el de la caída no se pisen.
-- **Fuegos.** Cada rayo sale del centro (`drawSVG: "0% 100%"`) y se aleja hasta desaparecer (`"100% 100%"`); al acabar se ocultan, porque con largo cero las puntas redondas dejaban un anillo de puntos.
-- **Cuándo se mueven.** Cada escena se reproduce solo si su polaroid ya ha caído y está en pantalla. La caída la marca un `call` en la timeline de la cámara, al terminar de aparecer la foto, que mira la dirección del scroll; la primera, el `onLeave` de su fundido. La pantalla se vigila con un `IntersectionObserver` (`threshold: 0.2`) y no con `ScrollTrigger`, porque las fotos se arrastran y cambian de sitio. En móvil, igual, con un `call` al terminar de subir cada foto.
-- **Hover.** Al pasar el ratón por una foto, su escena se acelera (`timeScale` a 1,6) y vuelve a 1 al salir.
-- **Movimiento reducido.** No se crea ninguna timeline: las escenas se ven quietas, en su primer fotograma.
+- **Fotos de verdad.** Las seis fotos son analógicas de los años noventa, generadas con Midjourney y retocadas: los novios salen siempre de espaldas o con la cara fuera del encuadre, con la misma ropa (ella lila y moño; él marrón y pajarita verde). Van en `public/polaroids/`, en WebP de 800 × 800, y las sirve `next/image` sin `preload`: la sección no está en la primera pantalla.
+- **Cuatro capas en el hueco de la foto.** De abajo arriba: la imagen (`object-fit: cover`), el grano de carrete, la capa de revelado y los garabatos. `Polaroid` las recibe como `children` y las recorta con `overflow: hidden`, también al arrastrar.
+- **Garabatos en vez de monigotes.** Encima de cada foto, dibujos a línea con el mismo trazo que el hero y el footer, como si alguien hubiera pintado sobre ella con un rotulador: la lluvia, las palomitas, las estrellas y la luna, los corazones del perro, los fuegos y el confeti. Y los "?" donde estarían las caras, que es la idea de toda la landing. Están calcados sobre la foto definitiva: ocupan su zona vacía y nunca tapan la escena.
+- **El color del trazo depende de la foto.** Beige en las cinco oscuras; en la «boda», cuyo muro es claro, el confeti va en lila, verde y rosa. Todos los SVG llevan una sombra fija muy suave (`drop-shadow`) para que se lean sobre cualquier zona.
+- **Dos timelines por foto.** `entrada` (una vez) y `bucles` (dos por foto, en pausa). La entrada es igual en las seis: la foto se revela como una Polaroid de verdad (la capa `#E9E2CF` se desvanece mientras el `filter` de la imagen pasa de `saturate(0)` a su color, 2 s), a los 1,2 s se dibujan los garabatos con `DrawSVGPlugin` y a los 1,7 saltan los "?". El `filter` solo se anima aquí: en bucle sería demasiado caro.
+- **Cuándo se mueven.** La entrada arranca cuando la polaroid ha caído; los bucles, cuando además la foto está en pantalla y la entrada ha terminado. La caída la marca un `call` en la timeline de la cámara, que mira la dirección del scroll; la primera, el `onLeave` de su fundido. Al volver hacia arriba la entrada se rebobina (`pause(0)`), de modo que la foto vuelve a quedar sin revelar y el revelado se repite al bajar. La pantalla se vigila con un `IntersectionObserver` (`threshold: 0.2`) y no con `ScrollTrigger`, porque las fotos se arrastran y cambian de sitio.
+- **Lluvia sin cortes.** El grupo de gotas se repite como un mosaico: 300 px a la derecha y, en la fila de arriba, 128 px más a la derecha (la inclinación de las gotas). Todo baja un tramo (`x: "-=128"`, `y: "+=300"`) en bucle; al repetirse, cada copia ocupa el sitio de otra. Con una sola copia quedaban huecos en las esquinas a mitad del tramo, así que son cuatro.
+- **Confeti a media caída.** Cada trozo empieza en un punto distinto de su caída: se coloca en la timeline entre los segundos 0 y 5, y esta arranca adelantada a los 5 (`seek`). Cada trozo va en su grupo, para que su giro dibujado y el de la caída no se pisen.
+- **Fuegos.** Cada rayo sale del centro (`drawSVG: "0% 0%"` → `"0% 100%"`) y se aleja hasta desaparecer (`"100% 100%"`), con la espera entre estallidos sorteada en cada vuelta (`repeatRefresh`).
+- **Grano de carrete.** La misma clase `.grano` de las cards, al 14 % dentro del hueco de la foto, con el `background-position` movido en saltos (`steps(4)`) para que el grano "baile" como en una película. Es lo primero que se quita si la sección va lenta.
+- **Hover.** La foto se acerca despacio dentro del marco (`scale: 1.06`, 1,2 s) y los garabatos van más rápido (`timeScale` a 1,8). Los dos vuelven a su sitio al salir.
+- **Movimiento reducido.** No se crea ninguna timeline: la capa de revelado está en `opacity: 0` desde CSS (solo se enciende con `motion-safe`), así que las fotos se ven ya reveladas, los garabatos ya dibujados y quietos, y el grano no se anima.
 - **Móvil.** Una sola columna en zigzag con una línea recta de puntos que se descubre con `clip-path`. Las fotos suben con un fundido (`y: 60`, `power2.out`) y el mismo `scrub: 1.5`.
 - **Movimiento reducido.** No hay pista ni ventana (sus clases llevan `motion-safe:`): la mesa cuadrada se ve entera, del ancho del contenedor, y no se puede arrastrar.
 
@@ -634,7 +640,9 @@ Recursos que se repiten:
 
 ### Imágenes
 
-Ya no queda ningún hueco provisional. Todas las imágenes van en la paleta de la landing y sin fondo, sobre el color de su sección: dibujos a línea en SVG (novios del hero, escenas de las cards y de las polaroids, footer) e ilustraciones en PNG con transparencia (orden del día).
+Ya no queda ningún hueco provisional. Casi todas las imágenes van en la paleta de la landing y sin fondo, sobre el color de su sección: dibujos a línea en SVG (novios del hero, escenas de las cards, garabatos de las polaroids, footer) e ilustraciones en PNG con transparencia (orden del día).
+
+La excepción son las seis fotos de la sección 2, las únicas fotografías de la landing: fotos analógicas de los años noventa generadas con Midjourney, con grano, colores apagados y luz de carrete. Hacen que la historia parezca real, y los garabatos que llevan encima mantienen el humor de los dibujos. Sus prompts y su retoque están en `noWeddingLanding-polaroids-fotos.md`.
 
 ---
 
@@ -689,13 +697,19 @@ Ya no queda ningún hueco provisional. Todas las imágenes van en la paleta de l
 | Textos de la navegación y la fila legal | Letra de palo | Boska | Toda la landing va en Boska |
 | Ilustración y logo del hero | SVG `hero-relleno-capas.svg` | Dibujados a mano en `novios-hero.tsx` y en el header, calcados del boceto | No se recibió el SVG |
 | Grosor del "?" de las caras | Cursiva de titulares | Cursiva de Boska, peso normal | Es lo que pide la especificación; el boceto lo muestra con otra fuente |
-| Pelota de la escena del perro | A los pies de ella; si el matasellos la tapa, 20 px a la izquierda | A los pies de él, a la izquierda | Movida 20 px seguía bajo el matasellos y sus ondas cruzaban el bote |
-| Lluvia de la escena 1 | Grupo de gotas y una copia | Cuatro copias en mosaico | Con una sola copia quedaban huecos en las esquinas a mitad del tramo |
+| Lluvia de la foto 1 | Grupo de gotas y una copia | Cuatro copias en mosaico | Con una sola copia quedaban huecos en las esquinas a mitad del tramo |
 | Animación de las polaroids | Caen una a una sobre la mesa, que se ve entera | Ventana fija con una cámara que recorre la mesa de foto en foto | Decisión del autor: se copia el componente Polaroid Scroll de Framer, con un scroll más largo y suave |
 | Hover de las polaroids | La foto se endereza, crece y gana sombra | Solo crece y gana sombra | Ahora la endereza la cámara al enfocarla |
 | Detalles de las polaroids | Papel, manchas, arrugas, caligrafía, matasellos y sello exportados de Figma como imagen | Dibujados a mano en `Polaroid`, en SVG | No había acceso al archivo de Figma; al ser vectores y degradados, sin `blur`, no pesan en las animaciones |
 | Chincheta que salta al arrastrar y `will-change` durante el arrastre | Opcionales | Sin hacer | — |
 | Botón "Recolocar" | No existe | Botón pequeño que devuelve las fotos arrastradas a su sitio | Decisión del autor |
+| Garabatos de las polaroids | Dibujados en Figma y exportados en SVG | Dibujados a mano en `garabatos-polaroid.tsx`, calcados sobre cada foto | No se recibió el SVG, como en el resto del proyecto; se parte de las formas de las escenas anteriores, que la propia especificación autoriza a copiar |
+| Garabatos de la foto 3 | Estrellas, luna y corazón | Igual, sin "?" | Lo dice la especificación, aunque las dos cabezas se vean. Se pueden añadir dos "?" si se quiere igualar con las fotos 1, 2 y 6 |
+| Corazones de la foto 4 | Saliendo del perro hacia arriba | Por encima de su cabeza, nunca sobre ella | Sobre la cara del perro tapaban la escena, y al subir se desvanecen antes de llegar al trozo de cielo azul, donde no se leerían |
+| Rayitas de la cola (foto 4) | Pegadas a la cola | Igual, a su derecha | En la foto definitiva el perro lleva la cola levantada y a la derecha |
+| Confeti de la foto 6 | Verde, rosa y beige | Lila, verde y rosa | El muro de la masía es claro: el beige no se leería. Es la regla de la propia especificación para las zonas claras |
+| Grano de carrete | PNG de ruido de 200 × 200 en mosaico | La clase `.grano` que ya existe, con el `background-position` animado | El mismo mosaico, sin añadir un archivo |
+| Calidad de las fotos | WebP de calidad 80 | Igual al exportar, pero sin tocar el `quality` de `next/image` | En Next 16 el `qualities` por defecto es `[75]`: un `quality={80}` se serviría a 75 y avisaría en consola |
 
 ---
 
@@ -716,6 +730,10 @@ Ya no queda ningún hueco provisional. Todas las imágenes van en la paleta de l
 ### Por hacer o comprobar
 
 - Probar a mano el arrastre del marquee y el de las polaroids con el ratón.
+- Foto 2: el cubo de palomitas lleva texto legible, que la especificación pedía evitar. Se clona en Photopea.
+- Comprobar que, al recargar la página con la sección 2 ya pasada, las fotos se ven reveladas. La capa de revelado tapa la foto hasta que su polaroid cae, y la caída la marca un `call` de una timeline con `scrub`; GSAP no dispara esos `call` cuando salta a una posición. Es el mismo riesgo que ya tienen `[data-hero]` y los tickets de la sección 4, pero aquí se nota más porque taparía la foto entera.
+- Comprobar si las seis fotos necesitan el retoque del apartado 3 de `noWeddingLanding-polaroids-fotos.md` (mapa de degradado y capa lila) para acabar de igualarlas; las que más se salen del tono son la 4 y la 6.
+- Los PNG de origen (`public/images/`) pesan unos 9,6 MB y se sirven al público por estar en `public/`. Deberían salir de ahí.
 - A 1920 × 1080 el hueco de los novios apenas se monta sobre el titular; a 1440 × 900 sí lo hace como en Figma.
 - Probar a mano el hilo elástico y la profundidad del footer con el ratón (comprobados solo con un ratón simulado).
 - Comprobar con el ratón que el ramo del botón del footer no choca con el corazón; si choca, reducirlo a escala 0,75.
@@ -763,3 +781,4 @@ Ya no queda ningún hueco provisional. Todas las imágenes van en la paleta de l
 | 14 de octubre de 2026 | Footer: relleno de los laterales con tarta, bola de discoteca que gira, botella cuyo corcho vuela hasta la copa de la novia, estrellas y anillos |
 | 14 de octubre de 2026 | Footer rehecho: cartel *save the date* con los novios, hilo elástico con corazón entre dos manos, fotomatón que imprime sus fotos, bucles y profundidad con el ratón |
 | 14 de octubre de 2026 | Revisión de la tipografía: se quitan Inter y Geist Mono del andamiaje y `font-sans` / `font-heading` pasan a Boska; corrección del historial |
+| 15 de octubre de 2026 | Sección 2: las seis polaroids pasan a llevar fotos analógicas de verdad, con garabatos animados encima y los "?" sobre las caras; revelado tipo Polaroid al caer cada foto, grano de carrete y zoom lento en el hover. Se retiran los monigotes de `escenas-polaroid.tsx` |
